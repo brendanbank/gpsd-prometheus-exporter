@@ -7,7 +7,7 @@
 
 It connects to the TCP port of the GPSD daemon and records relevant statistics and formats them as an Prometheus data exporter which you can visualze later in tools like [grafana](https://grafana.com/).
 
-![Graphana dashboard DOP](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/main/img/dop.png?raw=true)
+![Graphana dashboard DOP](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/dop.png?raw=true)
 
 
 ## Instalation:
@@ -99,7 +99,7 @@ I've included a [grafana dashboard json file](https://raw.githubusercontent.com/
 
  
 ## Per Satilite data
-![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/main/img/sats.png?raw=true)
+![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/sats.png?raw=true)
 
 ## PPS
 ![](https://github.com/brendanbank/gpsd-exporter/raw/master/img/clock_pps_offset.png?raw=true)
@@ -108,7 +108,7 @@ If you enable gpsd to monitor your pps device by starting `gpsd <option> [serial
 To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_exporter.py`
 
 ## Graph offset from a stationairy
-![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/main/img/geo_offset.png?raw=true)
+![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/geo_offset.png?raw=true)
 
 ## runtime commands
 
