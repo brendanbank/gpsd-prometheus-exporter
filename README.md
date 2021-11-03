@@ -107,8 +107,11 @@ I've included a [grafana dashboard json file](https://raw.githubusercontent.com/
 
 ## PPS
 ![](https://github.com/brendanbank/gpsd-exporter/raw/master/img/clock_pps_offset.png?raw=true)
-If you enable gpsd to monitor your pps device by starting 
-	`gpsd <option> [serial port path] [/dev/pps[0-..]` 
+
+If you enable gpsd to monitor your pps device by starting
+
+	gpsd <option> [serial port path] [/dev/pps[0-..]
+
 the exporter will monitor the clock offset from from the pps signal. And you can monitor the offset of your system clock.
 
 To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_exporter.py`
