@@ -1,5 +1,5 @@
-![Graphana dashboard](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/main/img/grafana_gpsd_dashboard_1.png?raw=true)
-![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/main/img/clock_pps_offset.png?raw=true)
+![Graphana dashboard](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/grafana_gpsd_dashboard_1.png?raw=true)
+![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/clock_pps_offset.png?raw=true)
 # gpsd-prometheus-exporter
 
 
