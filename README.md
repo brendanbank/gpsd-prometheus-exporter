@@ -42,7 +42,7 @@ And enable the serivce to run at boot.
 	
 Some U-Blox GPS units need to be forced to 115200 baud
 
-Check out ![gps_setserial.serivce](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) to run at boot time. 
+Check out [gps_setserial.serivce](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) to run at boot time. 
 	
 The default tcp port is 9015. You can test if the exporter is up by running the follwing command on the local machine:
 
