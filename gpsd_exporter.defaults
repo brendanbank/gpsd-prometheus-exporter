@@ -1,0 +1,10 @@
+# Devices gpsd should collect to at boot time.
+# They need to be read/writeable, either by user gpsd or the group dialout.
+
+# Other options you want to pass to gpsd
+GPSD_MON_OPTIONS="-v --pps-histogram --offset-from-geopoint --geopoint-lon 38.897809878104574 --geopoint-lat -77.03655125936501 --pps-time1 0.0030415"
+
+# To measure an offset from a fixed geo point: --offset-from-geopoin --geopoint-lat <lat> --geopoint-lon <long> 
+# observe the clock offset from the pps signal --pps-histogram 
+# If you calibriated you pps signal specify the fudge time1 with  --pps-time1 <time1> 
+#

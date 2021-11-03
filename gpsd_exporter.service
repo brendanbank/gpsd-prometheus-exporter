@@ -1,0 +1,16 @@
+[Unit]
+Description=gpsd monitor exporter
+After=network.target 
+Before=gpsd.service
+
+
+[Service]
+Environment="PYTHONUNBUFFERED=1"
+Restart=always
+EnvironmentFile=-/etc/default/gpsd_exporter.defaults
+ExecStart=/usr/local/bin/gpsd_exporter.py $GPSD_MON_OPTIONS
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+Alias=gpsd_monitor.service
