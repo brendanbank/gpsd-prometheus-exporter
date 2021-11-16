@@ -301,9 +301,6 @@ def init_metrics(args):
 
 def getPositionData(gpsd, metrics, args):
     nx = gpsd.next()
-    log.debug (nx)
-    return(None)
-    
     
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
@@ -376,6 +373,7 @@ def getPositionData(gpsd, metrics, args):
                     if (hasattr(sat, key)):
                         value = getattr(sat, key, -1)
                         metrics['SAT'][key].labels(sat['PRN'], sat['svid'], sat['gnssid']).set(value)
+
                     else:
                         # set 0 so there is at least 1 metric (which can be deleted later)
                         metrics['SAT'][key].labels(sat['PRN'], sat['svid'], sat['gnssid']).set(0)
