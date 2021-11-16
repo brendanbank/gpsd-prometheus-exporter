@@ -47,15 +47,14 @@ DEFAULT_HOST = 'localhost'
 NSEC=1000000000
 USEC=1000000
 MSEC=1000
-
+    
 class DepencendyError(Exception):
     pass
 
-from distutils.version import StrictVersion
+from pkg_resources import parse_version
 
-if StrictVersion(gps.__version__) < StrictVersion("3.18"):
+if parse_version(gps.__version__) < parse_version("3.18"):
     raise DepencendyError('Please upgrade the python gps package to 2.19 or higher.')
-
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
@@ -305,6 +304,9 @@ def init_metrics(args):
 
 def getPositionData(gpsd, metrics, args):
     nx = gpsd.next()
+    log.debug (nx)
+    return(None)
+    
     
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
