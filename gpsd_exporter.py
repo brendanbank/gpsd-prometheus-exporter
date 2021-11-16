@@ -159,7 +159,6 @@ USAGE
         if (debug > 0):
             logging.basicConfig(format='DEBUG %(funcName)s(%(lineno)s): %(message)s', 
                                 stream=sys.stderr, level=logging.DEBUG)
-            
         elif (verbose):
             logging.basicConfig(format=program_name + ': %(message)s', stream=sys.stderr, level=logging.INFO)
         else:
@@ -174,8 +173,6 @@ USAGE
         while True:
             try:
                 loop_connection(metrics, args)
-
-        
             except (KeyboardInterrupt):
                 print ("Applications closed!")
                 return(0)
