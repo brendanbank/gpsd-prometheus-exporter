@@ -415,16 +415,16 @@ def getPositionData(gpsd, metrics, args):
                 if (args.debug > 2): log.debug (f'set {key} to {value}')
         
         if args.geo_offset:
-            offset = MeterOffsetSmall((args.geo_lat, args.geo_lon), (nx['lat'], nx['lon']))
-            distance  = gps.misc.EarthDistanceSmall((nx['lat'], nx['lon']), (args.geo_lat, args.geo_lon))
-            
-            log.debug (f'distance {distance:0.2f}m offset x = {offset[0]:0.2f}m y = {offset[1]:0.2f}m')
-            
-            metrics['GEO_OFFSET_X'].observe(offset[0])
-            metrics['GEO_OFFSET_Y'].observe(offset[1])
-            metrics['GEO_OFFSET'].observe(distance)
-        
-    
+            if (hasattr(nx, 'lat') and hasattr(nx, 'lon') ):
+                offset = MeterOffsetSmall((args.geo_lat, args.geo_lon), (nx['lat'], nx['lon']))
+                distance  = gps.misc.EarthDistanceSmall((nx['lat'], nx['lon']), (args.geo_lat, args.geo_lon))
+                
+                log.debug (f'distance {distance:0.2f}m offset x = {offset[0]:0.2f}m y = {offset[1]:0.2f}m')
+                
+                metrics['GEO_OFFSET_X'].observe(offset[0])
+                metrics['GEO_OFFSET_Y'].observe(offset[1])
+                metrics['GEO_OFFSET'].observe(distance)
+
     elif nx['class'] == 'WATCH':
         pass
     
