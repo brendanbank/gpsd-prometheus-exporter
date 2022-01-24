@@ -134,3 +134,4 @@ ntpd_monitor.log
 /.DS_Store
 .DS_Store
 gps/
+/gps
