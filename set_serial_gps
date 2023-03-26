@@ -1,0 +1,6 @@
+#!/bin/sh
+
+/usr/bin/ubxtool -v 1  -s 9600 -S 115200 -f /dev/ttyS0
+/usr/bin/ubxtool -v 1  -s 115200 -f /dev/ttyS0 -d GLONASS
+/usr/bin/ubxtool -v 1  -s 115200 -f /dev/ttyS0 -e GALILEO
+/usr/bin/ubxtool -v 1  -s 115200 -f /dev/ttyS0 -p SAVE

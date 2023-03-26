@@ -2,12 +2,12 @@
 
 [Unit]
 Description=GPS Set Serial service
-Before=gpsd.service
-Before=gpsd.socket
-Before=gpsd_exporter.service
+After=gspd.service
 
 [Service]
-ExecStart=/usr/bin/ubxtool -v 1  -S 115200 -f /dev/ttyS0
+ExecStart=/usr/local/gpsd-prometheus-exporter/set_serial_gps
+RemainAfterExit=true
+Type=oneshot
 
 [Install]
 WantedBy=multi-user.target
