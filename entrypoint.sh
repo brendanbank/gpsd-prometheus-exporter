@@ -1,5 +1,6 @@
+#!/bin/sh
 
-EXPORTER_ARGS = ""
+EXPORTER_ARGS=""
 
 [[ -z "${GPSD_HOST}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --hostname ${GPSD_HOST}"
 [[ -z "${GPSD_PORT}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --port ${GPSD_PORT}"

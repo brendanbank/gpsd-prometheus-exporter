@@ -11,5 +11,5 @@ ENV GEOPOINT_LON=38.897809878104574
 ENV GEOPOINT_LAT=-77.03655125936501
 
 
-CMD ["entrypoint.sh"]
+CMD [ "./entrypoint.sh" ]
 
