@@ -2,7 +2,9 @@ name: DockerBuildAndPush
 
 on:
   push:
-    branches: master
+    branches: 
+      - master
+      - docker
 
 jobs:
   multi:
