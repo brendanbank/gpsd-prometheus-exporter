@@ -351,12 +351,18 @@ def getPositionData(gpsd, metrics, args):
             })
     
     elif nx['class'] == 'SKY':
+        satellites = nx.get('satellites')
+        if satellites is None:
+            log.debug (f'no satellites in SKY')
+            log.debug (nx)
+            return
+
         metrics['SEEN'].set(0)
         metrics['USED'].set(0)
         sat_before = metrics['SAT_STATUS'].keys()
         sat_here = []
             
-        for sat in nx['satellites']:
+        for sat in satellites:
             if not sat['PRN'] in sat_before:
                 log.info (f'New Sat {sat["PRN"]} added!')
                 log.debug (f'data {sat}')
