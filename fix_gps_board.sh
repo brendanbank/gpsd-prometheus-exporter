@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Thanks to https://lang-ship.com/reference/Arduino/libraries/RTC_RV-3028-C7_Arduino_Library/class_r_v3028.html#a9cbc9a009d4e5dbfeb29e366140be42b
+# And the folks at https://github.com/raspberrypi/linux/issues/2912
+
+# Raspberry Pi GPS/RTC Expansion Board https://store.uputronics.com/index.php?route=product/product&path=60_64&product_id=81
+
 function wait_for_EEBusy_done {
    busy=$((0x80))
    while (( busy == 0x80 ))
