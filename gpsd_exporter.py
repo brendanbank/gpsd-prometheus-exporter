@@ -24,9 +24,12 @@ import time
 import math
 import pwd
 import grp
+import queue
 
 import logging
 from prometheus_client import Histogram, CollectorRegistry, start_http_server, Gauge, Info
+from prometheus_client.metrics_core import GaugeMetricFamily
+from time import gmtime
 
 log = logging.getLogger(__name__)
 
@@ -79,6 +82,8 @@ class ModuleDepencendyError(ModuleNotFoundError):
 
     def __unicode__(self):
         return self.msg
+
+sat_queue = queue.Queue()
 
 
 def main(argv=None):  # IGNORE:C0111
@@ -201,6 +206,9 @@ def init_metrics(args):
     
     metrics = {}
     registry = CollectorRegistry()
+    
+    """ register the Satellite collector who takes the """
+    registry.register(SatCollector())
 
     metrics['SKY'] = {
         'gdop': Gauge('gpsd_gdop', 'Geometric (hyperspherical) dilution of precision', registry=registry),
@@ -214,15 +222,6 @@ def init_metrics(args):
         'uSat': Gauge('gpsd_uSat', 'Number of satellites used in navigation solution.', registry=registry),
     }
 
-    metrics['SAT'] = {
-        'ss': Gauge('gpsd_sat_ss', 'Signal to Noise ratio in dBHz.', ['PRN', 'svid', 'gnssid'], registry=registry),
-        'az': Gauge('gpsd_sat_az', 'Azimuth, degrees from true north.', ['PRN', 'svid', 'gnssid'], registry=registry),
-        'el': Gauge('gpsd_sat_el', 'Elevation in degrees.', ['PRN', 'svid', 'gnssid'], registry=registry),
-        'used': Gauge('gpsd_used', 'Used Satilite', ['PRN', 'svid', 'gnssid'], registry=registry),
-        'health': Gauge('gpsd_health', 'The health of this satellite. 0 is unknown, 1 is OK, and 2 is unhealthy', ['PRN', 'svid', 'gnssid'], 
-                        registry=registry),
-        
-        }
     metrics['TPV'] = {
             'lat': Gauge('gpsd_lat', 'Latitude in degrees: +/- signifies North/South.', registry=registry),
             'lon': Gauge('gpsd_long', 'Longitude in degrees: +/- signifies East/West.', registry=registry),
@@ -359,59 +358,14 @@ def getPositionData(gpsd, metrics, args):
 
         metrics['SEEN'].set(0)
         metrics['USED'].set(0)
-        sat_before = metrics['SAT_STATUS'].keys()
-        sat_here = []
             
         for sat in satellites:
-            if not sat['PRN'] in sat_before:
-                log.info (f'New Sat {sat["PRN"]} added!')
-                log.debug (f'data {sat}')
-
             metrics['SEEN'].inc()
-            
-            if sat['used']:
-                sat['used'] = 1
-            else:
-                sat['used'] = 0
-            
-            if args.mon_satellites:
-                for key in metrics['SAT'].keys():
-                    if (hasattr(sat, key)):
-                        value = getattr(sat, key, -1)
-                        metrics['SAT'][key].labels(sat['PRN'], sat['svid'], sat['gnssid']).set(value)
-
-                    else:
-                        # set 0 so there is at least 1 metric (which can be deleted later)
-                        metrics['SAT'][key].labels(sat['PRN'], sat['svid'], sat['gnssid']).set(0)
-
-                metrics['SAT_STATUS'][sat['PRN']] = [sat['PRN'], sat['svid'], sat['gnssid']]
-
             if sat['used']:
                 metrics['USED'].inc()
-
-            sat_here.append(sat['PRN'])
-
-        # check for sats that are out of view
-        
-        sats_noview = []
-        for sat in metrics['SAT_STATUS'].keys():
-            if not sat in sat_here:
-                (PRN, svid, gnssid) = metrics['SAT_STATUS'][sat]
-                log.info (f'Sat {PRN} is out of sight. Try Delete Sat!')
-                for m in metrics['SAT'].values():
-                    m.remove(PRN, svid, gnssid)
-                log.info (f'Sat {PRN} is out of sight. Deleted Sat!')
-                sats_noview.append(sat)
-
-        for sat in sats_noview:
-            del metrics['SAT_STATUS'][sat]
-
-        for key in metrics['SKY'].keys():
-            if (hasattr(nx, key)):
-                
-                value = getattr(nx, key, -1)
-                metrics['SKY'][key].set(getattr(nx, key, -1))
-                if (args.debug > 2): log.debug (f'set {key} to {value}') 
+            
+        if args.mon_satellites:
+            add_sat_stats(satellites)        
 
     elif nx['class'] == 'TPV':
         for key in metrics['TPV'].keys():
@@ -481,7 +435,74 @@ def loop_connection(metrics, args):
     while running:
         getPositionData(gpsd, metrics, args)
 
-if __name__ == "__main__":
+class SatCollector(object):
+    
+    
+    def __init__(self):
+        self.state = {}
+    
+    def collect(self):
+        """
+        This Method is called each time exporter is called to fetch the per Satellite metrics 
+        """
+        
+        metrics = {
+            'ss' : GaugeMetricFamily('gpsd_sat_ss', 'Signal to Noise ratio in dBHz.', labels=['PRN', 'svid', 'gnssid']),
+            'az' : GaugeMetricFamily('gpsd_sat_az', 'Azimuth, degrees from true north.', labels=['PRN', 'svid', 'gnssid']),
+            'el' : GaugeMetricFamily('gpsd_sat_el', 'Elevation in degrees.', labels=['PRN', 'svid', 'gnssid']),
+            'used' : GaugeMetricFamily('gpsd_used', 'Used Satellite', labels=['PRN', 'svid', 'gnssid']),
+            'health' : GaugeMetricFamily('gpsd_health', 'The health of this satellite. 0 is unknown, 1 is OK, and 2 is unhealthy', labels=['PRN', 'svid', 'gnssid'])
+        }
+        
+        log.debug(f'SatCollector::collect started ')
+        last_measurement = {}
+        
+        while not sat_queue.empty():
+            measurement = sat_queue.get()
+            log.debug(f'measurement:: {measurement}')            
 
+            sat = measurement['sat']
+            ts = measurement['ts']
+            
+            last_measurement[sat['PRN']] = sat
+            
+        
+        log.debug(f'last_measurement {last_measurement}')
+            
+        for sat in last_measurement.keys():
+            log.debug(f'sat:: {last_measurement[sat]}')
+            for key in metrics.keys():
+                sat_dict = last_measurement[sat]
+                if key in sat_dict.keys():
+                    metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid'])], sat_dict[key]) 
+                
+        
+        for key in metrics:
+            yield metrics[key]
+            
+
+def add_sat_stats(satellites):
+    
+    for sat in satellites:
+        
+        ts = time.time()
+        ts_new = int(ts)
+        
+        # print (f'ts {ts} ts_new {ts_new}' )
+        
+        sat_queue.put({'sat': sat, 'ts': ts})
+    
+    """ Keep the queue managable. """
+       
+    q_size = sat_queue.qsize()
+    log.debug(f'Queue size = {q_size} items.')
+    while sat_queue.qsize() > 2000:
+        sat_queue.get()
+
+    q_size_end = sat_queue.qsize()
+    log.debug(f'Current satellite queue size = {q_size_end}, pruned {q_size - q_size_end}')
+    
+if __name__ == "__main__":
+        
     sys.exit(main())
     
