@@ -450,7 +450,7 @@ class SatCollector(object):
             'ss' : GaugeMetricFamily('gpsd_sat_ss', 'Signal to Noise ratio in dBHz.', labels=['PRN', 'svid', 'gnssid', 'used']),
             'az' : GaugeMetricFamily('gpsd_sat_az', 'Azimuth, degrees from true north.', labels=['PRN', 'svid', 'gnssid', 'used']),
             'el' : GaugeMetricFamily('gpsd_sat_el', 'Elevation in degrees.', labels=['PRN', 'svid', 'gnssid', 'used']),
-            'used': Gauge('gpsd_used', 'Used Satilite', ['PRN', 'svid', 'gnssid', 'used']),
+            'used': GaugeMetricFamily('gpsd_used', 'Used Satilite', labels=['PRN', 'svid', 'gnssid', 'used']),
             'health' : GaugeMetricFamily('gpsd_health', 'The health of this satellite. 0 is unknown, 1 is OK, and 2 is unhealthy', labels=['PRN', 'svid', 'gnssid', 'used'])
         }
         
