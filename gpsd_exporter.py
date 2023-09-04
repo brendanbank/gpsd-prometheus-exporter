@@ -447,11 +447,10 @@ class SatCollector(object):
         """
         
         metrics = {
-            'ss' : GaugeMetricFamily('gpsd_sat_ss', 'Signal to Noise ratio in dBHz.', labels=['PRN', 'svid', 'gnssid']),
-            'az' : GaugeMetricFamily('gpsd_sat_az', 'Azimuth, degrees from true north.', labels=['PRN', 'svid', 'gnssid']),
-            'el' : GaugeMetricFamily('gpsd_sat_el', 'Elevation in degrees.', labels=['PRN', 'svid', 'gnssid']),
-            'used' : GaugeMetricFamily('gpsd_used', 'Used Satellite', labels=['PRN', 'svid', 'gnssid']),
-            'health' : GaugeMetricFamily('gpsd_health', 'The health of this satellite. 0 is unknown, 1 is OK, and 2 is unhealthy', labels=['PRN', 'svid', 'gnssid'])
+            'ss' : GaugeMetricFamily('gpsd_sat_ss', 'Signal to Noise ratio in dBHz.', labels=['PRN', 'svid', 'gnssid', 'used']),
+            'az' : GaugeMetricFamily('gpsd_sat_az', 'Azimuth, degrees from true north.', labels=['PRN', 'svid', 'gnssid', 'used']),
+            'el' : GaugeMetricFamily('gpsd_sat_el', 'Elevation in degrees.', labels=['PRN', 'svid', 'gnssid', 'used']),
+            'health' : GaugeMetricFamily('gpsd_health', 'The health of this satellite. 0 is unknown, 1 is OK, and 2 is unhealthy', labels=['PRN', 'svid', 'gnssid', 'used'])
         }
         
         log.debug(f'SatCollector::collect started ')
@@ -474,7 +473,7 @@ class SatCollector(object):
             for key in metrics.keys():
                 sat_dict = last_measurement[sat]
                 if key in sat_dict.keys():
-                    metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid'])], sat_dict[key]) 
+                    metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid']), str(sat_dict['used'])], sat_dict[key]) 
                 
         
         for key in metrics:
