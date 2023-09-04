@@ -350,6 +350,8 @@ def getPositionData(gpsd, metrics, args):
             })
     
     elif nx['class'] == 'SKY':
+        
+        """process the list of satellites """
         satellites = nx.get('satellites')
         if satellites is None:
             log.debug (f'no satellites in SKY')
@@ -366,6 +368,15 @@ def getPositionData(gpsd, metrics, args):
             
         if args.mon_satellites:
             add_sat_stats(satellites)        
+
+        """process the dop metrics """
+        for key in metrics['SKY'].keys():
+            if (hasattr(nx, key)):
+
+                value = getattr(nx, key, -1)
+                metrics['SKY'][key].set(getattr(nx, key, -1))
+                if (args.debug > 2): log.debug (f'set {key} to {value}') 
+
 
     elif nx['class'] == 'TPV':
         for key in metrics['TPV'].keys():
