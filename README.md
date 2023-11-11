@@ -122,12 +122,11 @@ To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_
 ## runtime commands
 
 
-	./gpsd_exporter.py -h
-	usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-E EXPORTER_PORT] [-H HOSTNAME] 
-	[-S] [--offset-from-geopoint] [--geopoint-lat GEO_LAT] [--geopoint-lon GEO_LON] 
-	[--geo-bucket-size GEO_BUCKET_SIZE] [--geo-bucket-count GEO_BUCKET_COUNT] 
-	[--pps-histogram] [--pps-bucket-size PPS_BUCKET_SIZE]
-	[--pps-bucket-count PPS_BUCKET_COUNT] [--pps-time1 PPS_TIME1]
+	usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-H HOSTNAME] [-E EXPORTER_PORT] [-S]
+	                        [--offset-from-geopoint] [--geopoint-lat GEO_LAT] [--geopoint-lon GEO_LON]
+	                        [--geo-bucket-size GEO_BUCKET_SIZE] [--geo-bucket-count GEO_BUCKET_COUNT]
+	                        [--pps-histogram] [--pps-bucket-size PPS_BUCKET_SIZE]
+	                        [--pps-bucket-count PPS_BUCKET_COUNT] [--pps-time1 PPS_TIME1]
 	
 	gpsd_exporter -- Exporter for gpsd output
 	
@@ -142,20 +141,20 @@ To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_
 	
 	USAGE
 	
-	optional arguments:
+	options:
 	  -h, --help            show this help message and exit
 	  -v, --verbose         set verbosity level [default: None]
 	  -V, --version         show program's version number and exit
 	  -d, --debug           set debug level [default: 0]
-	  -p PORT, --port PORT  set gpsd TCP Port number to connect to [default: 2947]
+	  -p PORT, --port PORT  set gpsd TCP Port number [default: 2947]
 	  -H HOSTNAME, --hostname HOSTNAME
-	                        set gpsd  TCP Hostname/IP address [default: localhost]
+	                        set gpsd TCP Hostname/IP address [default: localhost]
 	  -E EXPORTER_PORT, --exporter-port EXPORTER_PORT
 	                        set TCP Port for the exporter server [default: 9015]
 	  -S, --disable-monitor-satellites
 	                        Stops monitoring all satellites individually
 	  --offset-from-geopoint
-	                        track offset (x,y and distance) from a stationary location.
+	                        track offset (x,y offset and distance) from a stationary location.
 	  --geopoint-lat GEO_LAT
 	                        Latitude of a fixed stationary location.
 	  --geopoint-lon GEO_LON
@@ -171,3 +170,4 @@ To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_
 	                        Bucket count of PPS histogram [default: 40]
 	  --pps-time1 PPS_TIME1
 	                        Local pps clock (offset) time1 (ntp.conf) [default: 0]
+	
