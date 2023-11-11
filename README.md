@@ -10,7 +10,7 @@ It connects to the TCP port of the GPSD daemon and records relevant statistics a
 ![Graphana dashboard DOP](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/dop.png?raw=true)
 
 
-## Instalation:
+## Installation:
 
 Make sure gpsd, prometheus and grafana are properly running. `gpsd-prometheus-exporter`needs `python3` and the following python libraries:
 
@@ -42,7 +42,7 @@ And enable the serivce to run at boot.
 	
 Some U-Blox GPS units need to be forced to 115200 baud
 
-Check out [gps_setserial.serivce](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) to run at boot time. 
+Check out [gps_setserial.service](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) to run at boot time. 
 	
 The default tcp port is 9015. You can test if the exporter is up by running the follwing command on the local machine:
 
@@ -102,7 +102,7 @@ Be carefull not to break with the yml document format as it will block propper s
 I've included a [grafana dashboard json file](https://raw.githubusercontent.com/brendanbank/gpsd-prometheus-exporter/main/gpsd_grafana_dashboard.json) which you can load into grafana.
 
  
-## Per Satilite data
+## Per Satellite data
 ![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/sats.png?raw=true)
 
 ## PPS
@@ -116,7 +116,7 @@ the exporter will monitor the clock offset from from the pps signal. And you can
 
 To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_exporter.py`
 
-## Graph offset from a stationairy
+## Graph offset from a stationary
 ![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/geo_offset.png?raw=true)
 
 ## runtime commands
@@ -165,9 +165,33 @@ To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_
 	                        Bucket count of Geo histogram [default: 40]
 	  --pps-histogram       generate histogram data from pps devices.
 	  --pps-bucket-size PPS_BUCKET_SIZE
-	                        Bucket side of PPS histogram [default: 250 ns] (nano seconds)
+	                        Bucket side of PPS histogram in nanoseconds. [default: 250 ns]
 	  --pps-bucket-count PPS_BUCKET_COUNT
 	                        Bucket count of PPS histogram [default: 40]
 	  --pps-time1 PPS_TIME1
 	                        Local pps clock (offset) time1 (ntp.conf) [default: 0]
 	
+## Docker 
+
+### Docker Run
+
+	docker run -d --name gpsd-exporter \
+		-e GPSD_HOST=127.0.0.1 \
+		-e GPSD_PORT=2947 \
+		-e GEOPOINT_LON=38.897809878 \
+		-e GEOPOINT_LAT=-77.036551259 \
+		--network=host \
+		ghcr.io/ncareau/gpsd-prometheus-exporter:latest
+
+### Docker Compose
+
+	gpsd-exporter
+		image: ghcr.io/ncareau/gpsd-prometheus-exporter:latest
+		container_name: gpsd-exporter
+		environment:
+			- GPSD_HOST=127.0.0.1 
+			- GPSD_PORT=2947
+			- GEOPOINT_LON=38.897809878
+			- GEOPOINT_LAT=-77.036551259
+		network_mode: host
+		restart: unless-stopped
