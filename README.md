@@ -173,25 +173,55 @@ To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_
 	
 ## Docker 
 
+You can run this software with docker. 
+
 ### Docker Run
 
-	docker run -d --name gpsd-exporter \
-		-e GPSD_HOST=127.0.0.1 \
-		-e GPSD_PORT=2947 \
-		-e GEOPOINT_LON=38.897809878 \
-		-e GEOPOINT_LAT=-77.036551259 \
-		--network=host \
-		ghcr.io/ncareau/gpsd-prometheus-exporter:latest
+    docker run -d --name gpsd-exporter \
+        -p 9015:9015 \
+        -e GPSD_HOST=192.168.1.10 \
+        -e GPSD_PORT=2947 \
+        -e GEOPOINT_LON=38.897809878 \
+        -e GEOPOINT_LAT=-77.036551259 \
+        ghcr.io/ncareau/gpsd-prometheus-exporter:latest
 
 ### Docker Compose
 
-	gpsd-exporter
-		image: ghcr.io/ncareau/gpsd-prometheus-exporter:latest
-		container_name: gpsd-exporter
-		environment:
-			- GPSD_HOST=127.0.0.1 
-			- GPSD_PORT=2947
-			- GEOPOINT_LON=38.897809878
-			- GEOPOINT_LAT=-77.036551259
-		network_mode: host
-		restart: unless-stopped
+An example `docker-compose.yml` is provided in the root directory of this project. 
+
+    gpsd-exporter:
+        image: ghcr.io/ncareau/gpsd-prometheus-exporter:latest
+        container_name: gpsd-exporter
+        ports:
+            - 9015:9015
+        environment:
+            - GPSD_HOST=127.0.0.1 
+            - GPSD_PORT=2947
+            - GEOPOINT_LON=38.897809878
+            - GEOPOINT_LAT=-77.036551259
+        restart: unless-stopped
+
+### GPSd on Host
+
+If the gpsd daemon run directly on the host, you must either use network_mode: host
+
+    # Docker CLI
+    --network=host
+
+    # Docker Compose
+    network_mode: host
+
+or by adding `host.docker.internal` to connect the host
+
+    # Docker CLI - Remove "-p 9015:9015"
+    -e GPSD_HOST=host.docker.internal \
+    --add-host=host.docker.internal:host-gateway \
+
+
+    # Docker compose - Remove `ports:`
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
+
+    environment:
+        - GPSD_HOST=host.docker.internal
+
