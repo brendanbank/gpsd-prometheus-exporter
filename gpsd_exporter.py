@@ -436,7 +436,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 def loop_connection(metrics, args):
 
-    gpsd = gps.gps(host=args.hostname, verbose=1, mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE | gps.WATCH_SCALED)
+    gpsd = gps.gps(host=args.hostname, port=args.port, verbose=1, mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE | gps.WATCH_SCALED)
     drop_privileges()
     
     if not (gpsd):
