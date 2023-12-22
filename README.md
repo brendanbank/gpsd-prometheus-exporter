@@ -19,6 +19,7 @@ Make sure gpsd, prometheus and grafana are properly running. `gpsd-prometheus-ex
 
 To install:
 
+	apt update
 	atp install python3-prometheus-client
 	atp install python3-gps
 
@@ -27,9 +28,9 @@ If you want the `gpsd-prometheus-exporter` to be loaded automatically by `system
 
 	git clone https://github.com/brendanbank/gpsd-prometheus-exporter.git
 	cd gpsd-prometheus-exporter
-	sudo cp gpsd_exporter.defaults /etc/default
-	sudo cp gpsd_exporter.service /etc/systemd/system
-	sudo cp gpsd_exporter.py /usr/local/bin
+	cp gpsd_exporter.defaults /etc/default
+	cp gpsd_exporter.service /etc/systemd/system
+	cp gpsd_exporter.py /usr/local/bin
 
 Make sure `gpsd_exporter.py` has the execution bit set:
 
