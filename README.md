@@ -19,9 +19,9 @@ Make sure gpsd, prometheus and grafana are properly running. `gpsd-prometheus-ex
 
 To install:
 
-	atp update
-	atp install python3-prometheus-client
-	atp install python3-gps
+	apt update
+	apt install python3-prometheus-client
+	apt install python3-gps
 
 If you want the `gpsd-prometheus-exporter` to be loaded automatically by `systemd` please copy `gpsd_monitor.defaults` to 
 `/etc/default/gpsd_monitor.defaults` and `gpsd_monitor.service` to `/lib/systemd/system`
