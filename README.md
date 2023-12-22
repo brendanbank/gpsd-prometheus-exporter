@@ -19,7 +19,7 @@ Make sure gpsd, prometheus and grafana are properly running. `gpsd-prometheus-ex
 
 To install:
 
-	apt update
+	atp update
 	atp install python3-prometheus-client
 	atp install python3-gps
 
