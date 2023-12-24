@@ -1,4 +1,59 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.2.3"
+    },
+    {
+      "type": "panel",
+      "id": "graph",
+      "name": "Graph (old)",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "heatmap",
+      "name": "Heatmap",
+      "version": ""
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -24,7 +79,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 32,
+  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -57,7 +112,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "",
       "fieldConfig": {
@@ -104,14 +159,15 @@
           "values": false
         },
         "text": {},
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_lat{instance=~\"$instance\"}",
           "instant": true,
@@ -122,7 +178,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_long{instance=~\"$instance\"}",
           "instant": true,
@@ -136,7 +192,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "",
       "fieldConfig": {
@@ -183,14 +239,15 @@
           "values": false
         },
         "text": {},
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_sat_seen{instance=~\"$instance\"}",
           "instant": true,
@@ -204,7 +261,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "",
       "fieldConfig": {
@@ -251,14 +308,15 @@
           "values": false
         },
         "text": {},
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_sat_used{instance=~\"$instance\"}",
           "instant": true,
@@ -272,7 +330,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "",
       "fieldConfig": {
@@ -336,14 +394,15 @@
           "values": false
         },
         "text": {},
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_mode{instance=~\"$instance\"}",
           "instant": true,
@@ -357,7 +416,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "",
       "fieldConfig": {
@@ -434,14 +493,15 @@
           "values": false
         },
         "text": {},
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_status{instance=~\"$instance\"}",
           "instant": true,
@@ -455,7 +515,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -463,6 +523,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -536,7 +597,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_sat_used{instance=~\".*$instance.*\"}",
           "interval": "",
@@ -546,7 +607,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_sat_seen{instance=~\".*$instance.*\"}",
           "interval": "",
@@ -560,7 +621,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -677,14 +738,15 @@
           "values": true
         },
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -701,7 +763,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -752,12 +814,12 @@
         },
         "showHeader": false
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_version_info{instance=~\"$instance\",  device!~\"/dev/pps.*\"}",
           "format": "table",
@@ -769,7 +831,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_devices_info{instance=~\"$instance\",device!~\"/dev/pps.*\"}",
           "format": "table",
@@ -781,7 +843,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile($percentiles, sum(rate(gpsd_pps_histogram_bucket{instance=~\"$instance\"}[$rateinterval])) by (le))",
           "instant": true,
@@ -853,7 +915,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -861,6 +923,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -995,7 +1058,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
           "expr": "sum by (gnssid) (gpsd_used{instance=~\"$instance\"} == 1)",
@@ -1010,7 +1073,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1018,6 +1081,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1090,7 +1154,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_gdop{instance=~\"$instance\"}",
           "interval": "",
@@ -1100,7 +1164,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
           "expr": "gpsd_hdop{instance=~\"$instance\"}",
@@ -1111,7 +1175,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_pdop{instance=~\"$instance\"}",
           "interval": "",
@@ -1121,7 +1185,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
           "expr": "gpsd_tdop{instance=~\"$instance\"}",
@@ -1132,7 +1196,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_vdop{instance=~\"$instance\"}",
           "interval": "",
@@ -1142,7 +1206,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_ydop{instance=~\"$instance\"}",
           "interval": "",
@@ -1152,7 +1216,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_xdop{instance=~\"$instance\"}",
           "hide": false,
@@ -1167,7 +1231,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1175,6 +1239,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1250,7 +1315,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "gpsd_altMSL{instance=~\"$instance\"}",
           "interval": "",
@@ -1264,7 +1329,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "",
       "fieldConfig": {
@@ -1273,6 +1338,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1362,7 +1428,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
           "expr": "gpsd_lat{instance=~\"$instance\"}  >=10",
@@ -1373,7 +1439,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
           "expr": "gpsd_long{instance=~\"$instance\"}  >=4",
@@ -1423,7 +1489,7 @@
       "dataFormat": "tsbuckets",
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "$__interval",
       "fieldConfig": {
@@ -1501,7 +1567,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(increase(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le) ",
           "format": "heatmap",
@@ -1531,7 +1597,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1576,8 +1642,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1708,7 +1773,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile($percentiles, sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le))",
           "interval": "",
@@ -1718,7 +1783,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile(0.5, sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le))",
           "interval": "",
@@ -1728,7 +1793,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "histogram_quantile((1- $percentiles), sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le))",
           "interval": "",
@@ -1751,7 +1816,7 @@
       "dataFormat": "tsbuckets",
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "$__interval",
       "fieldConfig": {
@@ -1827,7 +1892,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(increase(gpsd_geo_bearing_x_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le) ",
           "format": "heatmap",
@@ -1865,7 +1930,7 @@
       "dataFormat": "tsbuckets",
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "$__interval",
       "fieldConfig": {
@@ -1941,7 +2006,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "expr": "sum(increase(gpsd_geo_bearing_y_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le) ",
           "format": "heatmap",
@@ -1979,7 +2044,7 @@
       "dataFormat": "tsbuckets",
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "description": "$__interval",
       "fieldConfig": {
@@ -2055,7 +2120,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "sum(increase(gpsd_geo_offset_m_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le) ",
@@ -2111,7 +2176,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2155,8 +2220,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2192,7 +2256,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "gpsd_sat_az{gnssid=~\"$gnssid\",instance=~\"$instance\", used=~\".*$used.*\"} >= -1",
@@ -2208,7 +2272,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2253,8 +2317,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2290,7 +2353,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "gpsd_sat_el{gnssid=~\"$gnssid\",instance=~\"$instance\",used=~\".*$used.*\"} >= -1",
@@ -2306,7 +2369,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "000000001"
+        "uid": "${DS_PROMETHEUS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2349,8 +2412,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2386,7 +2448,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
           "expr": "gpsd_sat_ss{gnssid=~\"$gnssid\",instance=~\"$instance\",used=~\".*$used.*\"}",
@@ -2420,7 +2482,7 @@
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fill": 0,
           "fillGradient": 0,
@@ -2460,7 +2522,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_sep{instance=~\"$instance\"}",
               "interval": "",
@@ -2470,7 +2532,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_eph{instance=~\"$instance\"}",
               "interval": "",
@@ -2480,7 +2542,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_epc{instance=~\"$instance\"}",
               "interval": "",
@@ -2490,7 +2552,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_eps{instance=~\"$instance\"}",
               "interval": "",
@@ -2500,7 +2562,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_epv{instance=~\"$instance\"}",
               "interval": "",
@@ -2510,7 +2572,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_epy{instance=~\"$instance\"}",
               "interval": "",
@@ -2520,7 +2582,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_epx{instance=~\"$instance\"}",
               "interval": "",
@@ -2567,7 +2629,7 @@
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fill": 0,
           "fillGradient": 0,
@@ -2607,7 +2669,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_ecefy{instance=~\"$instance\"}",
               "interval": "",
@@ -2654,7 +2716,7 @@
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fill": 0,
           "fillGradient": 0,
@@ -2694,7 +2756,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_ecefx{instance=~\"$instance\"}",
               "interval": "",
@@ -2741,7 +2803,7 @@
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "000000001"
+            "uid": "${DS_PROMETHEUS}"
           },
           "fill": 0,
           "fillGradient": 0,
@@ -2781,7 +2843,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "000000001"
+                "uid": "${DS_PROMETHEUS}"
               },
               "expr": "gpsd_ecefz{instance=~\"$instance\"}",
               "interval": "",
@@ -2836,20 +2898,15 @@
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "ntp0.bgwlan.nl:9015",
-          "value": "ntp0.bgwlan.nl:9015"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "000000001"
+          "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(gpsd_version_info, instance)",
         "hide": 0,
@@ -2872,14 +2929,10 @@
         "useTags": false
       },
       {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "000000001"
+          "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(gpsd_sat_ss, gnssid)",
         "hide": 0,
@@ -3050,14 +3103,10 @@
         "type": "custom"
       },
       {
-        "current": {
-          "selected": false,
-          "text": "True",
-          "value": "True"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "000000001"
+          "uid": "${DS_PROMETHEUS}"
         },
         "definition": "label_values(gpsd_sat_ss,used)",
         "hide": 0,

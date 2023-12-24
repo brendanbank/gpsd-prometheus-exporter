@@ -15,7 +15,7 @@ It connects to the TCP port of the GPSD daemon and records relevant statistics a
 Make sure gpsd, prometheus and grafana are properly running. `gpsd-prometheus-exporter`needs `python3` and the following python libraries:
 
 * [prometheus_client](https://github.com/prometheus/client_python)
-* gps-python libraries [gps](https://gpsd.gitlab.io/gpsd/) Note that this exporter needs at least version 3.19 of the lib's. Normally this comes with the instalation of gpsd. 
+* gps-python libraries [gps](https://gpsd.gitlab.io/gpsd/) Note that this exporter needs at least version 3.19 of the lib's. Normally this comes with the installation of gpsd. 
 
 To install:
 
@@ -36,7 +36,7 @@ Make sure `gpsd_exporter.py` has the execution bit set:
 
 	chmod +x /usr/local/bin/gpsd_exporter.py
 	
-And enable the serivce to run at boot.
+And enable the service to run at boot.
 	
 	systemctl enable gpsd_exporter.service
 	systemctl start gpsd_exporter.service
@@ -91,14 +91,14 @@ And you should see output like this:
 	gpsd_devices_info{activated="2021-01-20T12:22:31.003Z",bps="Unknown",cycle="Unknown",device="/dev/pps0",driver="PPS",flags="Unknown",mincycle="Unknown",native="Unknown",parity="Unknown",stopbits="Unknown",subtype="Unknown",subtype1="Unknown"} 1.0
 	...
 
-To make sure prometheus is polling the exporter add the following line to `/etc/prometheus/prometeus.yml` on the prometheus server.
+To make sure prometheus is polling the exporter add the following line to `/etc/prometheus/prometheus.yml` on the prometheus server.
 
 	  - job_name: gps
     	static_configs:
         - targets: 
                 - <hostname>:9015
 
-Be carefull not to break with the yml document format as it will block propper startup of prometheus.
+Be careful not to break with the yml document format as it will block propper startup of prometheus.
 
 I've included a [grafana dashboard json file](https://raw.githubusercontent.com/brendanbank/gpsd-prometheus-exporter/main/gpsd_grafana_dashboard.json) which you can load into grafana.
 
@@ -115,7 +115,7 @@ If you enable gpsd to monitor your pps device by starting
 
 the exporter will monitor the clock offset from from the pps signal. And you can monitor the offset of your system clock.
 
-To eable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_exporter.py`
+To enable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_exporter.py`
 
 ## Graph offset from a stationary
 ![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/geo_offset.png?raw=true)
