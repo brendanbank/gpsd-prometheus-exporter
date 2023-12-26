@@ -173,7 +173,7 @@ USAGE
         
         metrics = init_metrics(args)
         
-        start_http_server(args.exporter_port, addr = '::', registry=metrics['registry'])
+        start_http_server(args.exporter_port, registry=metrics['registry'])
         
         while True:
             try:
