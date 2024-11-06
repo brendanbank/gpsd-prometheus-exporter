@@ -1,0 +1,13 @@
+[Unit]
+Description=Configure Ethernet interface Coalesce setting using ethtool
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/ethtool -C eth0 tx-usecs 4 rx-usecs 4
+ExecStop=/usr/sbin/ethtool -C eth0 tx-usecs 48 rx-usecs 48
+ 
+[Install]
+WantedBy=multi-user.target
+
