@@ -3,19 +3,20 @@ DEV=/dev/ttyAMA0
 
 # set correct baud rate
 /usr/bin/ubxtool -v 1  -s 9600 -S 115200 --device /dev/ttyAMA0
+# Activate NMEA 4.1 protocol (on NEO-8M)
+gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00" $SERIAL_DEV
 # disable GLONASS
-/usr/bin/ubxtool -v 1  -s 115200 --device /dev/ttyAMA0 -d GLONASS
+/usr/bin/ubxtool -v 1 --device /dev/ttyAMA0 -d GLONASS
 # enable GALILEO
-/usr/bin/ubxtool -v 1  -s 115200 --device /dev/ttyAMA0 -e GALILEO
-
-# Below as per https://github.com/tiagofreire-pt/rpi_uputronics_stratum1_chrony/blob/main/steps/advanced_ublox_m8_tuning.md
-
+/usr/bin/ubxtool -v 1 --device /dev/ttyAMA0 -e GALILEO
+# enable BINARY
+/usr/bin/ubxtool -v 1 --device /dev/ttyAMA0 -e BINARY
 # disable SBAS 
-/usr/bin/ubxtool -v 1 -d SBAS --device /dev/ttyAMA0
+/usr/bin/ubxtool -v 1  --device /dev/ttyAMA0 -e SBAS
+# Below as per https://github.com/tiagofreire-pt/rpi_uputronics_stratum1_chrony/blob/main/steps/advanced_ublox_m8_tuning.md
 # configuration options
 /usr/bin/ubxtool -v 1 -p CFG-GNSS --device /dev/ttyAMA0
 /usr/bin/ubxtool -v 1 -p CFG-PMS,0 --device /dev/ttyAMA0
 /usr/bin/ubxtool -v 1 -p CFG-PMS --device /dev/ttyAMA0
 /usr/bin/ubxtool -v 1  --device /dev/ttyAMA0 -p SAVE
 /usr/bin/ubxtool -v 1 -p COLDBOOT --device /dev/ttyAMA0
-
