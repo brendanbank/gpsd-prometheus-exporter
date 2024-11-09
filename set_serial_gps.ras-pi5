@@ -4,7 +4,7 @@ DEV=/dev/ttyAMA0
 # set correct baud rate
 /usr/bin/ubxtool -v 1  -s 9600 -S 115200 --device /dev/ttyAMA0
 # Activate NMEA 4.1 protocol (on NEO-8M)
-gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00" $SERIAL_DEV
+gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00"  /dev/ttyAMA0
 # disable GLONASS
 /usr/bin/ubxtool -v 1 --device /dev/ttyAMA0 -d GLONASS
 # enable GALILEO
