@@ -1,8 +1,11 @@
 #!/bin/sh
 DEV=/dev/ttyAMA0
-
+sudo systemctl stop  gpsd.socket gpsd
 # set correct baud rate
-/usr/bin/ubxtool -v 1  -s 9600 -S 115200 --device /dev/ttyAMA0
+/usr/bin/ubxtool -v 1  -s 9600 -S 115200 -f /dev/ttyAMA0
+sudo systemctl start  gpsd.socket gpsd
+echo sleep 5
+sleep 5
 # Activate NMEA 4.1 protocol (on NEO-8M)
 gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00"  /dev/ttyAMA0
 # disable GLONASS
@@ -19,4 +22,4 @@ gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x0
 /usr/bin/ubxtool -v 1 -p CFG-PMS,0 --device /dev/ttyAMA0
 /usr/bin/ubxtool -v 1 -p CFG-PMS --device /dev/ttyAMA0
 /usr/bin/ubxtool -v 1  --device /dev/ttyAMA0 -p SAVE
-/usr/bin/ubxtool -v 1 -p COLDBOOT --device /dev/ttyAMA0
+#/usr/bin/ubxtool -v 1 -p COLDBOOT --device /dev/ttyAMA0
