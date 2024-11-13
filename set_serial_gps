@@ -1,13 +1,35 @@
 #!/bin/sh
+echo stop gpsd.service gpsd.socket
 /usr/bin/systemctl stop gpsd.service gpsd.socket
 sleep 1
 
+echo \# set speed to 115200 baud
 /usr/bin/ubxtool -v 1  -s 9600 -S 115200 -f /dev/ttyAMA0
+echo \# disable GLONASS
 /usr/bin/ubxtool -v 1  -s 115200 -f /dev/ttyAMA0 -d GLONASS
+echo \# enable GALILEO
 /usr/bin/ubxtool -v 1  -s 115200 -f /dev/ttyAMA0 -e GALILEO
-/usr/bin/ubxtool -v 1  -s 115200 -f /dev/ttyAMA0 -p SAVE
+echo \# enable BINARY
+/usr/bin/ubxtool -v 1 -f  /dev/ttyAMA0 -e BINARY
+echo \# enable SBAS
+/usr/bin/ubxtool -v 1 -f /dev/ttyAMA0 -e SBAS
 
 sleep 1
-
+echo \# start gpsd.service gpsd.socket
 /usr/bin/systemctl start gpsd.service gpsd.socket
-
+echo \# sleep 10 seconds
+sleep 10
+# Activate NMEA 4.1 protocol (on NEO-8M)
+# Below as per https://github.com/tiagofreire-pt/rpi_uputronics_stratum1_chrony/blob/main/steps/advanced_ublox_m8_tuning.md
+# configuration options
+echo \# ITFM \(Jamming/Interferance Monitor\)
+ubxtool -p MODEL,2 --device /dev/ttyAMA0
+echo \# NAV5 - Stationaty Dynamic Model
+ubxtool -p CFG-NAV5 --device /dev/ttyAMA0
+echo \# PMS - Power Management Setup
+/usr/bin/ubxtool -v 1 -p CFG-PMS,0 --device /dev/ttyAMA0
+/usr/bin/ubxtool -v 1 -p CFG-PMS --device /dev/ttyAMA0
+echo \# PMS - Power Management Setup
+#enable 4.1 messages
+gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00"  /dev/ttyAMA0
+/usr/bin/ubxtool -v 1  --device /dev/ttyAMA0 -p SAVE
