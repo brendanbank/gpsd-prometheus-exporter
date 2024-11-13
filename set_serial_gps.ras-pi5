@@ -1,25 +1,31 @@
 #!/bin/sh
+DATE=$(date --iso-8601=seconds)
 DEV=/dev/ttyAMA0
+#VERBOSE="-v 1"
+VERBOSE=""
+PROT_VERSION="-P 18.00"
 sudo systemctl stop  gpsd.socket gpsd
 # set correct baud rate
-/usr/bin/ubxtool -v 1  -s 9600 -S 115200 -f /dev/ttyAMA0
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION  -s 9600 -S 115200 -f $DEV
 sudo systemctl start  gpsd.socket gpsd
-echo sleep 5
-sleep 5
-# Activate NMEA 4.1 protocol (on NEO-8M)
-gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00"  /dev/ttyAMA0
+echo sleep 1
+sleep 1
 # disable GLONASS
-/usr/bin/ubxtool -v 1 --device /dev/ttyAMA0 -d GLONASS
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION --device $DEV -d GLONASS
 # enable GALILEO
-/usr/bin/ubxtool -v 1 --device /dev/ttyAMA0 -e GALILEO
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION --device $DEV -e GALILEO
 # enable BINARY
-/usr/bin/ubxtool -v 1 --device /dev/ttyAMA0 -e BINARY
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION --device $DEV -e BINARY
 # disable SBAS 
-/usr/bin/ubxtool -v 1  --device /dev/ttyAMA0 -e SBAS
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION  --device $DEV -e SBAS
 # Below as per https://github.com/tiagofreire-pt/rpi_uputronics_stratum1_chrony/blob/main/steps/advanced_ublox_m8_tuning.md
 # configuration options
-/usr/bin/ubxtool -v 1 -p CFG-GNSS --device /dev/ttyAMA0
-/usr/bin/ubxtool -v 1 -p CFG-PMS,0 --device /dev/ttyAMA0
-/usr/bin/ubxtool -v 1 -p CFG-PMS --device /dev/ttyAMA0
-/usr/bin/ubxtool -v 1  --device /dev/ttyAMA0 -p SAVE
-#/usr/bin/ubxtool -v 1 -p COLDBOOT --device /dev/ttyAMA0
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION -p CFG-GNSS --device $DEV
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION -p CFG-PMS,0 --device $DEV
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION -p CFG-PMS --device $DEV
+# Activate NMEA 4.1 protocol (on NEO-8M)
+gpsctl -t u-blox -D 5 -b -x "\x06\x17\x00\x41\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00"  $DEV
+/usr/bin/ubxtool $VERBOSE $PROT_VERSION  --device $DEV -p SAVE
+
+
+journalctl --since $DATE
