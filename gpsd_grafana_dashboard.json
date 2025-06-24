@@ -252,7 +252,7 @@
           "expr": "gpsd_sat_seen{instance=~\"$instance\"}",
           "instant": true,
           "interval": "",
-          "legendFormat": "Satilites Seen: ",
+          "legendFormat": "Satellites Seen: ",
           "refId": "A"
         }
       ],
@@ -321,7 +321,7 @@
           "expr": "gpsd_sat_used{instance=~\"$instance\"}",
           "instant": true,
           "interval": "",
-          "legendFormat": "Satilites Used:",
+          "legendFormat": "Satellites Used:",
           "refId": "A"
         }
       ],
@@ -1067,7 +1067,7 @@
           "refId": "A"
         }
       ],
-      "title": "Satilite Used",
+      "title": "Satellite Used",
       "type": "timeseries"
     },
     {
@@ -2170,7 +2170,7 @@
           "refId": "A"
         }
       ],
-      "title": "Per Satilite detail",
+      "title": "Per Satellite detail",
       "type": "row"
     },
     {
@@ -2266,7 +2266,7 @@
           "refId": "A"
         }
       ],
-      "title": "Satilite Azimuth, degrees from true north",
+      "title": "Satellite Azimuth, degrees from true north",
       "type": "timeseries"
     },
     {
@@ -2363,7 +2363,7 @@
           "refId": "A"
         }
       ],
-      "title": "Satilite Elevation in degrees",
+      "title": "Satellite Elevation in degrees",
       "type": "timeseries"
     },
     {
@@ -2458,7 +2458,7 @@
           "refId": "A"
         }
       ],
-      "title": "Satilite Signal to Noise ratio",
+      "title": "Satellite Signal to Noise ratio",
       "type": "timeseries"
     },
     {
