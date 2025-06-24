@@ -1569,7 +1569,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(increase(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le) ",
+          "expr": "sum(increase(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\",device=\"$device\"}[$rateinterval])) by (le) ",
           "format": "heatmap",
           "instant": false,
           "interval": "",
@@ -1775,7 +1775,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile($percentiles, sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le))",
+          "expr": "histogram_quantile($percentiles, sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\",device=\"$device\"}[$rateinterval])) by (le))",
           "interval": "",
           "legendFormat": "${percentiles}th percentile positive Clock offset",
           "refId": "A"
@@ -1785,7 +1785,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.5, sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le))",
+          "expr": "histogram_quantile(0.5, sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\",device=\"$device\"}[$rateinterval])) by (le))",
           "interval": "",
           "legendFormat": "50th percentile negative Clock offset",
           "refId": "C"
@@ -1795,7 +1795,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile((1- $percentiles), sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\"}[$rateinterval])) by (le))",
+          "expr": "histogram_quantile((1- $percentiles), sum(rate(gpsd_pps_histogram_bucket{instance=~\".*$instance.*\",device=\"$device\"}[$rateinterval])) by (le))",
           "interval": "",
           "legendFormat": "(100-${percentiles})th percentile negative Clock offset",
           "refId": "B"
@@ -3117,6 +3117,32 @@
         "options": [],
         "query": {
           "query": "label_values(gpsd_sat_ss,used)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 3,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(gpsd_pps_histogram_bucket,device)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "PPS device",
+        "multi": false,
+        "name": "device",
+        "options": [],
+        "query": {
+          "query": "label_values(gpsd_pps_histogram_bucket,device)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
