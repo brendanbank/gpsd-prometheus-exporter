@@ -72,6 +72,9 @@ jobs:
           echo "The Docker image is available at:" >> RELEASE_NOTES.md
           echo "\`\`\`bash" >> RELEASE_NOTES.md
           echo "ghcr.io/brendanbank/gpsd-prometheus-exporter:latest" >> RELEASE_NOTES.md
+          echo "\`\`\`" >> RELEASE_NOTES.md
+          echo "Or use the specific tag:" >> RELEASE_NOTES.md
+          echo "\`\`\`" >> RELEASE_NOTES.md
           echo "ghcr.io/brendanbank/gpsd-prometheus-exporter:$TAG" >> RELEASE_NOTES.md
           echo "\`\`\`" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
