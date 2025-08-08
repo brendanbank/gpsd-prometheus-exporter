@@ -2,6 +2,30 @@
 ![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/clock_pps_offset.png?raw=true)
 # gpsd-prometheus-exporter
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Features](#features)
+  - [Per Satellite Data](#per-satellite-data)
+  - [PPS Monitoring](#pps)
+  - [Geo Offset Tracking](#graph-offset-from-a-stationary)
+- [Usage](#usage)
+  - [Command Line Options](#runtime-commands)
+  - [Docker](#docker)
+    - [Docker Run](#docker-run)
+    - [Docker Compose](#docker-compose)
+    - [Environment Variables](#environment-variables)
+    - [Direct Configuration](#direct-configuration)
+  - [GPSd on Host](#gpsd-on-host)
+- [Configuration](#configuration)
+  - [Environment Variables](#environment-variables)
+  - [Command Line Arguments](#runtime-commands)
+- [Examples](#examples)
+  - [Basic Setup](#using-pre-built-image)
+  - [Local Build](#building-locally)
+  - [Custom Configuration](#using-environment-variables)
+
 
 `gpsd-prometheus-exporter` is a [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitlab.io/gpsd/) GPS daemon. 
 
