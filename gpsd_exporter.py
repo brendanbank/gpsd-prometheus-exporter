@@ -25,6 +25,7 @@ import math
 import pwd
 import grp
 import queue
+import socket
 
 import logging
 from prometheus_client import Histogram, CollectorRegistry, start_http_server, Gauge, Info
@@ -47,6 +48,9 @@ PROFILE = 0
 GPSD_PORT = 2947
 EXPORTER_PORT = 9015
 DEFAULT_HOST = 'localhost'
+DEFAULT_TIMEOUT = 10  # Default connection timeout in seconds
+DEFAULT_RETRY_DELAY = 5  # Default initial retry delay in seconds
+DEFAULT_MAX_RETRY_DELAY = 300  # Maximum retry delay in seconds (5 minutes)
 NSEC=1000000000
 USEC=1000000
 MSEC=1000
@@ -129,6 +133,14 @@ USAGE
         parser.add_argument('-E', '--exporter-port', type=int, dest="exporter_port", default=EXPORTER_PORT,
                             help="set TCP Port for the exporter server [default: %(default)s]")
         
+        parser.add_argument('-t', '--timeout', type=int, dest="timeout", default=DEFAULT_TIMEOUT,
+                            help="set connection timeout in seconds [default: %(default)s]")
+        
+        parser.add_argument('--retry-delay', type=int, dest="retry_delay", default=DEFAULT_RETRY_DELAY,
+                            help="initial retry delay in seconds [default: %(default)s]")
+        parser.add_argument('--max-retry-delay', type=int, dest="max_retry_delay", default=DEFAULT_MAX_RETRY_DELAY,
+                            help="maximum retry delay in seconds [default: %(default)s]")
+        
         parser.add_argument('-S', '--disable-monitor-satellites', dest="mon_satellites", 
                             default=True, action="store_false",
                             help="Stops monitoring all satellites individually")
@@ -175,18 +187,35 @@ USAGE
         
         start_http_server(args.exporter_port, registry=metrics['registry'])
         
+        retry_count = 0
+        current_delay = args.retry_delay
+        
         while True:
             try:
                 loop_connection(metrics, args)
+                # If we get here, connection was successful, reset retry count
+                retry_count = 0
+                current_delay = args.retry_delay
+                
             except (KeyboardInterrupt):
                 print ("Applications closed!")
                 return(0)
-            except (StopIteration,ConnectionRefusedError) as e:
-                print (f'Connection broke, something happened {e}')
-            
-            print ('sleep for 5....')
-            
-            time.sleep(5)
+            except (StopIteration, ConnectionRefusedError, socket.timeout) as e:
+                retry_count += 1
+                log.error(f'Connection to gpsd failed (attempt {retry_count}): {e}')
+                
+                print(f'WARNING: Connection failed (attempt {retry_count}), retrying in {current_delay}s...')
+                print(f'Connection error: {e}')
+                
+                time.sleep(current_delay)
+                
+                # Exponential backoff with maximum delay
+                current_delay = min(current_delay * 2, args.max_retry_delay)
+                
+            except Exception as e:
+                log.error(f'Unexpected error in main loop: {e}')
+                print(f'ERROR: Unexpected error: {e}')
+                return(1)
 
                 
         return 0
@@ -445,12 +474,27 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 def loop_connection(metrics, args):
 
-    gpsd = gps.gps(host=args.hostname, port=args.port, verbose=1, mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE | gps.WATCH_SCALED)
-    drop_privileges()
-    
-    if not (gpsd):
-        log.critical('Could not connect')
-        return(None)
+    try:
+        # Set socket timeout for the connection
+        socket.setdefaulttimeout(args.timeout)
+        
+        log.info(f'Attempting to connect to gpsd at {args.hostname}:{args.port} with {args.timeout}s timeout')
+        gpsd = gps.gps(host=args.hostname, port=args.port, verbose=1, mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE | gps.WATCH_SCALED)
+        drop_privileges()
+        
+        if not gpsd:
+            log.critical(f'Could not connect to gpsd at {args.hostname}:{args.port}')
+            raise ConnectionRefusedError(f'Failed to establish connection to gpsd at {args.hostname}:{args.port}')
+            
+    except socket.timeout:
+        log.critical(f'Connection to gpsd at {args.hostname}:{args.port} timed out after {args.timeout}s')
+        raise ConnectionRefusedError(f'Connection timeout after {args.timeout}s')
+    except ConnectionRefusedError:
+        # Re-raise to be caught by the main loop
+        raise
+    except Exception as e:
+        log.critical(f'Unexpected error connecting to gpsd: {e}')
+        raise ConnectionRefusedError(f'Failed to connect to gpsd: {e}')
     running = True
     while running:
         try:
