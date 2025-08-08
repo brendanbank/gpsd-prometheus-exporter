@@ -356,22 +356,27 @@ def init_metrics(args):
 
 def getPositionData(gpsd, metrics, args):
     try:
+        # Check if gpsd object is still valid
+        if not gpsd or not hasattr(gpsd, 'next'):
+            log.error("GPSD connection object is invalid")
+            raise ConnectionError("GPSD connection object is invalid")
+            
         nx = gpsd.next()
     except KeyError as e:
         # Handle missing satellite data fields (like 'az', 'el', etc.)
         log.warning(f"GPSD reported incomplete satellite data: {e}")
         return
-    except (ConnectionError, OSError, socket.error) as e:
+    except (ConnectionError, OSError, socket.error, BrokenPipeError, ConnectionResetError) as e:
         # Handle connection errors - re-raise to trigger retry
-        log.error(f"Connection error reading from GPSD: {e}")
+        log.error(f"Connection error reading from GPSD: {type(e).__name__}: {e}")
         raise
     except Exception as e:
         # Handle other GPSD connection or data parsing errors
-        log.error(f"Error reading from GPSD: {e}")
-        # Re-raise connection-related errors to trigger retry
-        if "connection" in str(e).lower() or "socket" in str(e).lower():
-            raise
-        return
+        log.error(f"Error reading from GPSD: {type(e).__name__}: {e}")
+        # For any other exception, assume it might be connection-related and re-raise
+        # This is more aggressive but prevents the endless loop
+        log.error(f"Re-raising unexpected error as connection error: {type(e).__name__}: {e}")
+        raise ConnectionError(f"GPSD read error: {type(e).__name__}: {e}")
     
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
@@ -536,8 +541,12 @@ def loop_connection(metrics, args):
         except KeyboardInterrupt:
             log.info("Received keyboard interrupt, shutting down...")
             raise
+        except (ConnectionError, OSError, socket.error, BrokenPipeError, ConnectionResetError) as e:
+            # Re-raise connection errors to trigger retry in main loop
+            log.error(f"Connection error in data loop: {type(e).__name__}: {e}")
+            raise
         except Exception as e:
-            log.error(f"Unexpected error in main loop: {e}")
+            log.error(f"Unexpected error in main loop: {type(e).__name__}: {e}")
             # Continue running to avoid crashing the container
             continue
 

@@ -184,18 +184,26 @@ You can run this software with docker.
         -e GPSD_PORT=2947 \
         -e GEOPOINT_LON=38.897809878 \
         -e GEOPOINT_LAT=-77.036551259 \
-        ghcr.io/ncareau/gpsd-prometheus-exporter:latest
+        ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
 
 ### Docker Compose
 
 Two Docker Compose files are provided:
 
-1. **`docker-compose.yml`** - Uses pre-built image from registry
-2. **`docker-compose.build.yml`** - Builds image locally
+1. **`docker-compose.yml`** - Uses pre-built image from GitHub Container Registry
+2. **`docker-compose.build.yml`** - Builds image locally with enhanced features
+
+#### Using Pre-built Image
+
+To use the pre-built image from GitHub Container Registry:
+
+```bash
+docker compose up -d
+```
 
 #### Building Locally
 
-To build the image locally with all features:
+To build the image locally with enhanced features:
 
 ```bash
 docker compose -f docker-compose.build.yml up --build
@@ -223,10 +231,10 @@ EOF
 Then run:
 
 ```bash
-# Using pre-built image
+# Using pre-built image from registry
 docker compose up -d
 
-# Or build locally
+# Or build locally with enhanced features
 docker compose -f docker-compose.build.yml up --build
 ```
 
@@ -251,15 +259,37 @@ The following environment variables are supported:
 
 #### Direct Configuration
 
-Alternatively, you can configure the environment variables directly in docker-compose.yml:
+For pre-built image (`docker-compose.yml`):
 
     gpsd-exporter:
-        image: ghcr.io/ncareau/gpsd-prometheus-exporter:latest
+        image: ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
         container_name: gpsd-exporter
         ports:
             - 9015:9015
         environment:
-            - GPSD_HOST=127.0.0.1 
+            - GPSD_HOST=host.docker.internal
+            - GPSD_PORT=2947
+            - GEOPOINT_LON=38.897809878
+            - GEOPOINT_LAT=-77.036551259
+            - PPS_TIME1=0.123
+            - VERBOSE=1
+            - DEBUG=0
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        restart: unless-stopped
+
+For local build (`docker-compose.build.yml`):
+
+    gpsd-exporter:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        image: gpsd-prometheus-exporter:stable
+        container_name: gpsd-exporter
+        ports:
+            - 9015:9015
+        environment:
+            - GPSD_HOST=localhost
             - GPSD_PORT=2947
             - GEOPOINT_LON=38.897809878
             - GEOPOINT_LAT=-77.036551259
@@ -267,6 +297,7 @@ Alternatively, you can configure the environment variables directly in docker-co
             - VERBOSE=1
             - DEBUG=0
         restart: unless-stopped
+        network_mode: host
 
 ### Enhanced Features (Local Build)
 
@@ -274,8 +305,10 @@ The `docker-compose.build.yml` includes enhanced features:
 
 - **Infinite retry with exponential backoff**: Automatically retries connection to gpsd
 - **Connection timeout**: Configurable timeout (default 10s)
-- **Improved error handling**: Clear error messages and proper exit codes
+- **Improved error handling**: Clear error messages, proper exit codes, and robust connection failure recovery
+- **Robust connection management**: Properly handles closed sockets, connection failures, and any GPSD read errors
 - **Environment variable control**: All features controllable via environment variables
+- **Host networking**: Direct access to host services via `network_mode: host`
 
 ### GPSd on Host
 
