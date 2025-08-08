@@ -81,8 +81,8 @@ jobs:
           echo "\`\`\`bash" >> RELEASE_NOTES.md
           echo "docker run -d \\" >> RELEASE_NOTES.md
           echo "  --name gpsd-exporter \\" >> RELEASE_NOTES.md
-          echo "  -p 9015:9015 \\" >> RELEASE_NOTES.md
-          echo "  -e GPSD_HOST=host.docker.internal \\" >> RELEASE_NOTES.md
+          echo "  --network=host \\" >> RELEASE_NOTES.md
+          echo "  -e GPSD_HOST=localhost \\" >> RELEASE_NOTES.md
           echo "  -e GPSD_PORT=2947 \\" >> RELEASE_NOTES.md
           echo "  -e GEOPOINT_LON=38.897809878 \\" >> RELEASE_NOTES.md
           echo "  -e GEOPOINT_LAT=-77.036551259 \\" >> RELEASE_NOTES.md
