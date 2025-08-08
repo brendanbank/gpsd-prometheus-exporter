@@ -400,7 +400,7 @@ scrape_configs:
 
 ### Grafana Dashboard
 
-Import the provided [Grafana dashboard JSON](https://raw.githubusercontent.com/brendanbank/gpsd-prometheus-exporter/main/gpsd_grafana_dashboard.json) into Grafana for comprehensive GPS monitoring visualization.
+Import the provided [Grafana dashboard JSON](https://raw.githubusercontent.com/brendanbank/gpsd-prometheus-exporter/refs/heads/master/gpsd_grafana_dashboard.json) into Grafana for comprehensive GPS monitoring visualization.
 
 ## License
 
