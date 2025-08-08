@@ -1,257 +1,111 @@
-![Graphana dashboard](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/grafana_gpsd_dashboard_1.png?raw=true)
-![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/clock_pps_offset.png?raw=true)
 # gpsd-prometheus-exporter
+
+A [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitlab.io/gpsd/) GPS daemon that provides comprehensive GPS monitoring and visualization capabilities.
+
+![Grafana Dashboard](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/grafana_gpsd_dashboard_1.png?raw=true)
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [Installation](#installation)
 - [Features](#features)
+  - [GPS Position and Quality Metrics](#gps-position-and-quality-metrics)
   - [Per Satellite Data](#per-satellite-data)
-  - [PPS Monitoring](#pps)
-  - [Geo Offset Tracking](#graph-offset-from-a-stationary)
-- [Usage](#usage)
-  - [Command Line Options](#runtime-commands)
-  - [Docker](#docker)
-    - [Docker Run](#docker-run)
+  - [PPS Time Synchronization](#pps-time-synchronization)
+  - [Geographic Offset Tracking](#geographic-offset-tracking)
+- [Installation](#installation)
+  - [Docker (Recommended)](#docker-recommended)
+    - [Quick Start](#quick-start)
     - [Docker Compose](#docker-compose)
     - [Environment Variables](#environment-variables)
-    - [Direct Configuration](#direct-configuration)
-  - [GPSd on Host](#gpsd-on-host)
+    - [Host Network Configuration](#host-network-configuration)
+  - [Native Installation](#native-installation)
 - [Configuration](#configuration)
   - [Environment Variables](#environment-variables)
-  - [Command Line Arguments](#runtime-commands)
-- [Examples](#examples)
-  - [Basic Setup](#using-pre-built-image)
-  - [Local Build](#building-locally)
-  - [Custom Configuration](#using-environment-variables)
+  - [Command Line Options](#command-line-options)
+- [Usage Examples](#usage-examples)
+  - [Basic Docker Setup](#basic-docker-setup)
+  - [Local Build](#local-build)
+  - [Custom Configuration](#custom-configuration)
+  - [Prometheus Integration](#prometheus-integration)
+  - [Grafana Dashboard](#grafana-dashboard)
 
-## Overview:
+## Overview
 
-`gpsd-prometheus-exporter` is a [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitlab.io/gpsd/) GPS daemon. 
+`gpsd-prometheus-exporter` connects to the TCP port of the GPSD daemon and records relevant GPS statistics, formatting them as Prometheus metrics for visualization in tools like [Grafana](https://grafana.com/).
 
-It connects to the TCP port of the GPSD daemon and records relevant statistics and formats them as an Prometheus data exporter which you can visualze later in tools like [grafana](https://grafana.com/).
+The exporter provides real-time monitoring of:
+- GPS position accuracy and quality metrics
+- Individual satellite data and signal strength
+- PPS (Pulse Per Second) time synchronization accuracy
+- Geographic offset tracking from a reference point
 
-![Graphana dashboard DOP](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/dop.png?raw=true)
+## Features
 
+### GPS Position and Quality Metrics
 
-## Installation:
+Monitor GPS accuracy and quality metrics including DOP (Dilution of Precision) values:
 
-Make sure gpsd, prometheus and grafana are properly running. `gpsd-prometheus-exporter`needs `python3` and the following python libraries:
+![DOP Metrics](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/dop.png?raw=true)
 
-* [prometheus_client](https://github.com/prometheus/client_python)
-* gps-python libraries [gps](https://gpsd.gitlab.io/gpsd/) Note that this exporter needs at least version 3.18 of the lib's. Normally this comes with the installation of gpsd. 
+### Per Satellite Data
 
-To install:
+Track individual satellite performance and signal quality:
 
-	apt update
-	apt install python3-prometheus-client
-	apt install python3-gps
+![Per Satellite Data](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/sats.png?raw=true)
 
-If you want the `gpsd-prometheus-exporter` to be loaded automatically by `systemd` please copy `gpsd_monitor.defaults` to 
-`/etc/default/gpsd_monitor.defaults` and `gpsd_monitor.service` to `/lib/systemd/system`
+### PPS Time Synchronization
 
-	git clone https://github.com/brendanbank/gpsd-prometheus-exporter.git
-	cd gpsd-prometheus-exporter
-	cp gpsd_exporter.defaults /etc/default
-	cp gpsd_exporter.service /etc/systemd/system
-	cp gpsd_exporter.py /usr/local/bin
+Monitor clock offset from PPS (Pulse Per Second) signals for precise time synchronization:
 
-Make sure `gpsd_exporter.py` has the execution bit set:
+![PPS Time Offset](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/clock_pps_offset.png?raw=true)
 
-	chmod +x /usr/local/bin/gpsd_exporter.py
-	
-And enable the service to run at boot.
-	
-	systemctl enable gpsd_exporter.service
-	systemctl start gpsd_exporter.service
-	
-Some U-Blox GPS units need to be forced to 115200 baud
+To enable PPS monitoring, start gpsd with a PPS device:
 
-Check out [gps_setserial.service](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) to run at boot time. 
-	
-The default tcp port is 9015. You can test if the exporter is up by running the follwing command on the local machine:
+```bash
+gpsd <options> [serial port path] /dev/pps[0-9]
+```
 
-	curl -s localhost:9015
-	
-And you should see output like this:
+Then add `--pps-histogram` to the exporter runtime arguments.
 
-	# HELP gpsd_gdop Geometric (hyperspherical) dilution of precision
-	# TYPE gpsd_gdop gauge
-	gpsd_gdop 1.36
-	# HELP gpsd_hdop Horizontal dilution of precision
-	# TYPE gpsd_hdop gauge
-	gpsd_hdop 0.74
-	gpsd_xdop 0.39
-	# HELP gpsd_nSat Number of satellite objects in "satellites" array
-	# TYPE gpsd_nSat gauge
-	gpsd_nSat 0.0
-	# HELP gpsd_uSat Number of satellites used in navigation solution.
-	# TYPE gpsd_uSat gauge
-	gpsd_uSat 0.0
-	# HELP gpsd_lat Latitude in degrees: +/- signifies North/South.
-	# TYPE gpsd_lat gauge
-	gpsd_lat 52.4240029
-	# HELP gpsd_long Longitude in degrees: +/- signifies East/West.
-	# TYPE gpsd_long gauge
-	gpsd_long 4.6157675
-	# HELP gpsd_altHAE Altitude, height above allipsoid, in meters. Probably WGS84.
-	# TYPE gpsd_altHAE gauge
-	gpsd_altHAE 62.191
-	# HELP gpsd_altMSL MSL Altitude in meters. The geoid used is rarely specified and is often inaccurate.
-	# TYPE gpsd_altMSL gauge
-	gpsd_altMSL 16.309
-	# HELP gpsd_sat_used Used in current solution? 
-	# TYPE gpsd_sat_used gauge
-	gpsd_sat_used 19.0
-	# HELP gpsd_sat_seen Seen in current solution? 
-	# TYPE gpsd_sat_seen gauge
-	gpsd_sat_seen 34.0
-	# HELP gpsd_version_info Version Details
-	# TYPE gpsd_version_info gauge
-	gpsd_version_info{proto_major="3",proto_minor="14",release="3.20",rev="3.20"} 1.0
-	# HELP gpsd_devices_info Device Details
-	# TYPE gpsd_devices_info gauge
-	gpsd_devices_info{activated="2021-01-20T12:22:31.083Z",bps="115200",cycle="1.0",device="/dev/ttyS0",driver="u-blox",flags="1",mincycle="0.25",native="1",parity="N",stopbits="1",subtype="SW ROM CORE 3.01 (107888),HW 00080000",subtype1=",FWVER=SPG 3.01,PROTVER=18.00,GPS;GLO;GAL;BDS,SBAS;IMES;QZSS"} 1.0
-	gpsd_devices_info{activated="2021-01-20T12:22:31.003Z",bps="Unknown",cycle="Unknown",device="/dev/pps0",driver="PPS",flags="Unknown",mincycle="Unknown",native="Unknown",parity="Unknown",stopbits="Unknown",subtype="Unknown",subtype1="Unknown"} 1.0
-	...
+### Geographic Offset Tracking
 
-To make sure prometheus is polling the exporter add the following line to `/etc/prometheus/prometheus.yml` on the prometheus server.
+Track position offset from a stationary reference point:
 
-	  - job_name: gps
-    	static_configs:
-        - targets: 
-                - <hostname>:9015
+![Geographic Offset](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/geo_offset.png?raw=true)
 
-Be careful not to break with the yml document format as it will block propper startup of prometheus.
+## Installation
 
-I've included a [grafana dashboard json file](https://raw.githubusercontent.com/brendanbank/gpsd-prometheus-exporter/main/gpsd_grafana_dashboard.json) which you can load into grafana.
+### Docker (Recommended)
 
- 
-## Per Satellite data
-![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/sats.png?raw=true)
+The easiest way to run the exporter is using Docker.
 
-## PPS
-![](https://github.com/brendanbank/gpsd-exporter/raw/master/img/clock_pps_offset.png?raw=true)
+#### Quick Start
 
-If you enable gpsd to monitor your pps device by starting
+```bash
+docker run -d --name gpsd-exporter \
+    -p 9015:9015 \
+    -e GPSD_HOST=localhost \
+    -e GPSD_PORT=2947 \
+    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+```
 
-	gpsd <option> [serial port path] [/dev/pps[0-..]
-
-the exporter will monitor the clock offset from from the pps signal. And you can monitor the offset of your system clock.
-
-To enable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd_exporter.py`
-
-## Graph offset from a stationary
-![](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/geo_offset.png?raw=true)
-
-## runtime commands
-
-
-	usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-H HOSTNAME] [-E EXPORTER_PORT] [-t TIMEOUT]
-	                        [--retry-delay RETRY_DELAY] [--max-retry-delay MAX_RETRY_DELAY] [-S]
-	                        [--offset-from-geopoint] [--geopoint-lat GEO_LAT] [--geopoint-lon GEO_LON]
-	                        [--geo-bucket-size GEO_BUCKET_SIZE] [--geo-bucket-count GEO_BUCKET_COUNT]
-	                        [--pps-histogram] [--pps-bucket-size PPS_BUCKET_SIZE]
-	                        [--pps-bucket-count PPS_BUCKET_COUNT] [--pps-time1 PPS_TIME1]
-	
-	gpsd_exporter -- Exporter for gpsd output
-	
-	  Created by Brendan Bank on 2021-01-10.
-	  Copyright 2021 Brendan Bank. All rights reserved.
-	
-	  Licensed under the BSD-3-Clause
-	  https://opensource.org/licenses/BSD-3-Clause
-	
-	  Distributed on an "AS IS" basis without warranties
-	  or conditions of any kind, either express or implied.
-	
-	USAGE
-	
-	options:
-	  -h, --help            show this help message and exit
-	  -v, --verbose         set verbosity level [default: None]
-	  -V, --version         show program's version number and exit
-	  -d, --debug           set debug level [default: 0]
-	  -p PORT, --port PORT  set gpsd TCP Port number [default: 2947]
-	  -H HOSTNAME, --hostname HOSTNAME
-	                        set gpsd TCP Hostname/IP address [default: localhost]
-	  -E EXPORTER_PORT, --exporter-port EXPORTER_PORT
-	                        set TCP Port for the exporter server [default: 9015]
-	  -t TIMEOUT, --timeout TIMEOUT
-	                        set connection timeout in seconds [default: 10]
-	  --retry-delay RETRY_DELAY
-	                        initial retry delay in seconds [default: 10]
-	  --max-retry-delay MAX_RETRY_DELAY
-	                        maximum retry delay in seconds [default: 300]
-	  -S, --disable-monitor-satellites
-	                        Stops monitoring all satellites individually
-	  --offset-from-geopoint
-	                        track offset (x,y offset and distance) from a stationary location.
-	  --geopoint-lat GEO_LAT
-	                        Latitude of a fixed stationary location.
-	  --geopoint-lon GEO_LON
-	                        Longitude of a fixed stationary location.
-	  --geo-bucket-size GEO_BUCKET_SIZE
-	                        Bucket side of Geo histogram [default: 0.5 meter]
-	  --geo-bucket-count GEO_BUCKET_COUNT
-	                        Bucket count of Geo histogram [default: 40]
-	  --pps-histogram       generate histogram data from pps devices.
-	  --pps-bucket-size PPS_BUCKET_SIZE
-	                        Bucket side of PPS histogram in nanoseconds. [default: 250 ns]
-	  --pps-bucket-count PPS_BUCKET_COUNT
-	                        Bucket count of PPS histogram [default: 40]
-	  --pps-time1 PPS_TIME1
-	                        Local pps clock (offset) time1 (ntp.conf) [default: 0]
-	
-## Docker 
-
-You can run this software with docker. 
-
-### Docker Run
-
-    docker run -d --name gpsd-exporter \
-        -p 9015:9015 \
-        -e GPSD_HOST=192.168.1.10 \
-        -e GPSD_PORT=2947 \
-        -e GEOPOINT_LON=38.897809878 \
-        -e GEOPOINT_LAT=-77.036551259 \
-        -e PPS_BUCKET_SIZE=50000 \
-        -e PPS_BUCKET_COUNT=40 \
-        -e PPS_TIME1=0.123 \
-        -e GEO_BUCKET_SIZE=0.5 \
-        -e GEO_BUCKET_COUNT=40 \
-        -e EXPORTER_PORT=9015 \
-        -e VERBOSE=1 \
-        -e DEBUG=0 \
-        ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
-
-### Docker Compose
+#### Docker Compose
 
 Two Docker Compose files are provided:
 
-1. **`docker-compose.yml`** - Uses pre-built image from GitHub Container Registry
-2. **`docker-compose.build.yml`** - Builds image locally with enhanced features
-
-#### Using Pre-built Image
-
-To use the pre-built image from GitHub Container Registry:
-
+**Using Pre-built Image** (`docker-compose.yml`):
 ```bash
 docker compose up -d
 ```
 
-#### Building Locally
-
-To build the image locally with enhanced features:
-
+**Building Locally** (`docker-compose.build.yml`):
 ```bash
 docker compose -f docker-compose.build.yml up --build
 ```
 
-#### Using Environment Variables
+#### Environment Variables
 
-The docker-compose files are configured to read environment variables. You can create a `.env` file in the same directory with your configuration:
+Create a `.env` file for configuration:
 
 ```bash
 # Create .env file
@@ -271,19 +125,78 @@ DEBUG=0
 EOF
 ```
 
-Then run:
+#### Host Network Configuration
+
+If gpsd runs directly on the host, use host networking:
 
 ```bash
-# Using pre-built image from registry
-docker compose up -d
+# Docker CLI
+docker run -d --name gpsd-exporter \
+    --network=host \
+    -e GPSD_HOST=localhost \
+    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
 
-# Or build locally with enhanced features
-docker compose -f docker-compose.build.yml up --build
+# Docker Compose
+network_mode: host
 ```
 
-#### Environment Variables
+Or use `host.docker.internal` for container networking:
 
-The following environment variables are supported:
+```bash
+# Docker CLI
+docker run -d --name gpsd-exporter \
+    -e GPSD_HOST=host.docker.internal \
+    --add-host=host.docker.internal:host-gateway \
+    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+
+# Docker Compose
+extra_hosts:
+    - "host.docker.internal:host-gateway"
+environment:
+    - GPSD_HOST=host.docker.internal
+```
+
+### Native Installation
+
+For systems where Docker is not available:
+
+#### Prerequisites
+
+Ensure gpsd, Prometheus, and Grafana are properly running. The exporter requires:
+
+- Python 3
+- [prometheus_client](https://github.com/prometheus/client_python)
+- [gps](https://gpsd.gitlab.io/gpsd/) library (version 3.18+)
+
+#### Installation Steps
+
+```bash
+# Install dependencies
+apt update
+apt install python3-prometheus-client python3-gps
+
+# Clone repository
+git clone https://github.com/brendanbank/gpsd-prometheus-exporter.git
+cd gpsd-prometheus-exporter
+
+# Install service files
+cp gpsd_exporter.defaults /etc/default
+cp gpsd_exporter.service /etc/systemd/system
+cp gpsd_exporter.py /usr/local/bin
+chmod +x /usr/local/bin/gpsd_exporter.py
+
+# Enable and start service
+systemctl enable gpsd_exporter.service
+systemctl start gpsd_exporter.service
+```
+
+#### U-Blox GPS Configuration
+
+Some U-Blox GPS units require forced 115200 baud. See [gps_setserial.service](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) for boot-time configuration.
+
+## Configuration
+
+### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -300,81 +213,132 @@ The following environment variables are supported:
 | `GEO_BUCKET_COUNT` | `40` | Geo offset histogram bucket count |
 | `PPS_BUCKET_COUNT` | `40` | PPS histogram bucket count |
 
-#### Direct Configuration
+### Command Line Options
 
-For pre-built image (`docker-compose.yml`):
+```bash
+usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-H HOSTNAME] [-E EXPORTER_PORT] [-t TIMEOUT]
+                        [--retry-delay RETRY_DELAY] [--max-retry-delay MAX_RETRY_DELAY] [-S]
+                        [--offset-from-geopoint] [--geopoint-lat GEO_LAT] [--geopoint-lon GEO_LON]
+                        [--geo-bucket-size GEO_BUCKET_SIZE] [--geo-bucket-count GEO_BUCKET_COUNT]
+                        [--pps-histogram] [--pps-bucket-size PPS_BUCKET_SIZE]
+                        [--pps-bucket-count PPS_BUCKET_COUNT] [--pps-time1 PPS_TIME1]
 
-    gpsd-exporter:
-        image: ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
-        container_name: gpsd-exporter
-        ports:
-            - 9015:9015
-        environment:
-            - GPSD_HOST=host.docker.internal
-            - GPSD_PORT=2947
-            - GEOPOINT_LON=38.897809878
-            - GEOPOINT_LAT=-77.036551259
-            - PPS_BUCKET_SIZE=50000
-            - PPS_BUCKET_COUNT=40
-            - PPS_TIME1=0.123
-            - GEO_BUCKET_SIZE=0.5
-            - GEO_BUCKET_COUNT=40
-            - EXPORTER_PORT=9015
-            - VERBOSE=1
-            - DEBUG=0
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        restart: unless-stopped
+gpsd_exporter -- Exporter for gpsd output
 
-For local build (`docker-compose.build.yml`):
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         set verbosity level [default: None]
+  -V, --version         show program's version number and exit
+  -d, --debug           set debug level [default: 0]
+  -p PORT, --port PORT  set gpsd TCP Port number [default: 2947]
+  -H HOSTNAME, --hostname HOSTNAME
+                        set gpsd TCP Hostname/IP address [default: localhost]
+  -E EXPORTER_PORT, --exporter-port EXPORTER_PORT
+                        set TCP Port for the exporter server [default: 9015]
+  -t TIMEOUT, --timeout TIMEOUT
+                        set connection timeout in seconds [default: 10]
+  --retry-delay RETRY_DELAY
+                        initial retry delay in seconds [default: 10]
+  --max-retry-delay MAX_RETRY_DELAY
+                        maximum retry delay in seconds [default: 300]
+  -S, --disable-monitor-satellites
+                        Stops monitoring all satellites individually
+  --offset-from-geopoint
+                        track offset (x,y offset and distance) from a stationary location.
+  --geopoint-lat GEO_LAT
+                        Latitude of a fixed stationary location.
+  --geopoint-lon GEO_LON
+                        Longitude of a fixed stationary location.
+  --geo-bucket-size GEO_BUCKET_SIZE
+                        Bucket side of Geo histogram [default: 0.5 meter]
+  --geo-bucket-count GEO_BUCKET_COUNT
+                        Bucket count of Geo histogram [default: 40]
+  --pps-histogram       generate histogram data from pps devices.
+  --pps-bucket-size PPS_BUCKET_SIZE
+                        Bucket side of PPS histogram in nanoseconds. [default: 250 ns]
+  --pps-bucket-count PPS_BUCKET_COUNT
+                        Bucket count of PPS histogram [default: 40]
+  --pps-time1 PPS_TIME1
+                        Local pps clock (offset) time1 (ntp.conf) [default: 0]
+```
 
-    gpsd-exporter:
-        build:
-          context: .
-          dockerfile: Dockerfile
-        image: gpsd-prometheus-exporter:stable
-        container_name: gpsd-exporter
-        ports:
-            - 9015:9015
-        environment:
-            - GPSD_HOST=localhost
-            - GPSD_PORT=2947
-            - GEOPOINT_LON=38.897809878
-            - GEOPOINT_LAT=-77.036551259
-            - PPS_BUCKET_SIZE=50000
-            - PPS_BUCKET_COUNT=40
-            - PPS_TIME1=0.123
-            - GEO_BUCKET_SIZE=0.5
-            - GEO_BUCKET_COUNT=40
-            - EXPORTER_PORT=9015
-            - VERBOSE=1
-            - DEBUG=0
-        restart: unless-stopped
-        network_mode: host
+## Usage Examples
 
+### Basic Docker Setup
 
-### GPSd on Host
+Test the exporter with a simple Docker run:
 
-If the gpsd daemon run directly on the host, you must either use network_mode: host
+```bash
+curl -s localhost:9015
+```
 
-    # Docker CLI
-    --network=host
+Expected output:
+```
+# HELP gpsd_gdop Geometric (hyperspherical) dilution of precision
+# TYPE gpsd_gdop gauge
+gpsd_gdop 1.36
+# HELP gpsd_hdop Horizontal dilution of precision
+# TYPE gpsd_hdop gauge
+gpsd_hdop 0.74
+# HELP gpsd_lat Latitude in degrees: +/- signifies North/South.
+# TYPE gpsd_lat gauge
+gpsd_lat 52.4240029
+# HELP gpsd_long Longitude in degrees: +/- signifies East/West.
+# TYPE gpsd_long gauge
+gpsd_long 4.6157675
+...
+```
 
-    # Docker Compose
-    network_mode: host
+### Local Build
 
-or by adding `host.docker.internal` to connect the host
+Build the Docker image locally with enhanced features:
 
-    # Docker CLI - Remove "-p 9015:9015"
-    -e GPSD_HOST=host.docker.internal \
-    --add-host=host.docker.internal:host-gateway \
+```bash
+docker compose -f docker-compose.build.yml up --build
+```
 
+### Custom Configuration
 
-    # Docker compose - Remove `ports:`
-    extra_hosts:
-        - "host.docker.internal:host-gateway"
+Advanced configuration with all features enabled:
 
-    environment:
-        - GPSD_HOST=host.docker.internal
+```bash
+docker run -d --name gpsd-exporter \
+    -p 9015:9015 \
+    -e GPSD_HOST=192.168.1.10 \
+    -e GPSD_PORT=2947 \
+    -e GEOPOINT_LON=38.897809878 \
+    -e GEOPOINT_LAT=-77.036551259 \
+    -e PPS_BUCKET_SIZE=50000 \
+    -e PPS_BUCKET_COUNT=40 \
+    -e PPS_TIME1=0.123 \
+    -e GEO_BUCKET_SIZE=0.5 \
+    -e GEO_BUCKET_COUNT=40 \
+    -e EXPORTER_PORT=9015 \
+    -e VERBOSE=1 \
+    -e DEBUG=0 \
+    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+```
 
-Good Luck!
+### Prometheus Integration
+
+Add to your Prometheus configuration (`/etc/prometheus/prometheus.yml`):
+
+```yaml
+scrape_configs:
+  - job_name: gpsd
+    static_configs:
+      - targets: ['localhost:9015']
+    scrape_interval: 15s
+```
+
+### Grafana Dashboard
+
+Import the provided [Grafana dashboard JSON](https://raw.githubusercontent.com/brendanbank/gpsd-prometheus-exporter/main/gpsd_grafana_dashboard.json) into Grafana for comprehensive GPS monitoring visualization.
+
+## License
+
+Licensed under the BSD-3-Clause License. See [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
