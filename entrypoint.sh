@@ -2,7 +2,7 @@
 
 EXPORTER_ARGS=""
 
-[[ -z "${DEBUG}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} -d"
+[[ "${DEBUG}" != "0" && -n "${DEBUG}" ]] && EXPORTER_ARGS="${EXPORTER_ARGS} -d"
 
 [[ -z "${GPSD_HOST}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --hostname ${GPSD_HOST}"
 [[ -z "${GPSD_PORT}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --port ${GPSD_PORT}"
