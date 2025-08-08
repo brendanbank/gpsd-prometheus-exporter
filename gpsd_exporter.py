@@ -503,7 +503,7 @@ def loop_connection(metrics, args):
             getPositionData(gpsd, metrics, args)
         except KeyboardInterrupt:
             log.info("Received keyboard interrupt, shutting down...")
-            running = False
+            raise  # Re-raise KeyboardInterrupt to be caught by main loop
         except Exception as e:
             log.error(f"Unexpected error in main loop: {e}")
             # Continue running to avoid crashing the container
