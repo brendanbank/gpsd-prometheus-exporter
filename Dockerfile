@@ -1,4 +1,4 @@
-FROM python:alpine3.10
+FROM python:alpine3.12
 
 RUN pip install prometheus_client
 RUN pip install gps
