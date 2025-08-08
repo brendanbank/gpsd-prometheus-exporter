@@ -123,7 +123,8 @@ To enable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd
 ## runtime commands
 
 
-	usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-H HOSTNAME] [-E EXPORTER_PORT] [-S]
+	usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-H HOSTNAME] [-E EXPORTER_PORT] [-t TIMEOUT]
+	                        [--retry-delay RETRY_DELAY] [--max-retry-delay MAX_RETRY_DELAY] [-S]
 	                        [--offset-from-geopoint] [--geopoint-lat GEO_LAT] [--geopoint-lon GEO_LON]
 	                        [--geo-bucket-size GEO_BUCKET_SIZE] [--geo-bucket-count GEO_BUCKET_COUNT]
 	                        [--pps-histogram] [--pps-bucket-size PPS_BUCKET_SIZE]
@@ -152,6 +153,12 @@ To enable pps monitoring add `--pps-histogram` to the runtime arguments of `gpsd
 	                        set gpsd TCP Hostname/IP address [default: localhost]
 	  -E EXPORTER_PORT, --exporter-port EXPORTER_PORT
 	                        set TCP Port for the exporter server [default: 9015]
+	  -t TIMEOUT, --timeout TIMEOUT
+	                        set connection timeout in seconds [default: 10]
+	  --retry-delay RETRY_DELAY
+	                        initial retry delay in seconds [default: 10]
+	  --max-retry-delay MAX_RETRY_DELAY
+	                        maximum retry delay in seconds [default: 300]
 	  -S, --disable-monitor-satellites
 	                        Stops monitoring all satellites individually
 	  --offset-from-geopoint
@@ -221,7 +228,10 @@ GPSD_PORT=2947
 GEOPOINT_LON=38.897809878
 GEOPOINT_LAT=-77.036551259
 PPS_BUCKET_SIZE=50000
+PPS_BUCKET_COUNT=40
 PPS_TIME1=0.123
+GEO_BUCKET_SIZE=0.5
+GEO_BUCKET_COUNT=40
 EXPORTER_PORT=9015
 VERBOSE=1
 DEBUG=0
