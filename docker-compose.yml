@@ -5,13 +5,13 @@ services:
     image: ghcr.io/ncareau/gpsd-prometheus-exporter:latest
     container_name: gpsd-exporter
     ports:
-      - 9015:9015
+      - "${EXPORTER_PORT:-9015}:9015"
     environment:
-      - GPSD_HOST=host.docker.internal
-      - GPSD_PORT=2947
-      - GEOPOINT_LON=38.897809878
-      - GEOPOINT_LAT=-77.036551259
-      - PPS_BUCKET_SIZE=50000
+      - GPSD_HOST=${GPSD_HOST:-host.docker.internal}
+      - GPSD_PORT=${GPSD_PORT:-2947}
+      - GEOPOINT_LON=${GEOPOINT_LON:-38.897809878}
+      - GEOPOINT_LAT=${GEOPOINT_LAT:--77.036551259}
+      - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-50000}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

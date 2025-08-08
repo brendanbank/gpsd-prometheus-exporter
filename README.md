@@ -190,6 +190,32 @@ You can run this software with docker.
 
 An example `docker-compose.yml` is provided in the root directory of this project. 
 
+#### Using Environment Variables
+
+The docker-compose.yml file is configured to read environment variables. You can create a `.env` file in the same directory with your configuration:
+
+```bash
+# Create .env file
+cat > .env << EOF
+GPSD_HOST=host.docker.internal
+GPSD_PORT=2947
+GEOPOINT_LON=38.897809878
+GEOPOINT_LAT=-77.036551259
+PPS_BUCKET_SIZE=50000
+EXPORTER_PORT=9015
+EOF
+```
+
+Then run:
+
+```bash
+docker-compose up -d
+```
+
+#### Direct Configuration
+
+Alternatively, you can configure the environment variables directly in docker-compose.yml:
+
     gpsd-exporter:
         image: ghcr.io/ncareau/gpsd-prometheus-exporter:latest
         container_name: gpsd-exporter
