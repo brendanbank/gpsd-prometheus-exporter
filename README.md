@@ -26,6 +26,7 @@
   - [Local Build](#building-locally)
   - [Custom Configuration](#using-environment-variables)
 
+## Overview:
 
 `gpsd-prometheus-exporter` is a [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitlab.io/gpsd/) GPS daemon. 
 
