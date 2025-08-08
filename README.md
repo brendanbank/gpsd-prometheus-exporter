@@ -289,7 +289,12 @@ For pre-built image (`docker-compose.yml`):
             - GPSD_PORT=2947
             - GEOPOINT_LON=38.897809878
             - GEOPOINT_LAT=-77.036551259
+            - PPS_BUCKET_SIZE=50000
+            - PPS_BUCKET_COUNT=40
             - PPS_TIME1=0.123
+            - GEO_BUCKET_SIZE=0.5
+            - GEO_BUCKET_COUNT=40
+            - EXPORTER_PORT=9015
             - VERBOSE=1
             - DEBUG=0
         extra_hosts:
@@ -311,7 +316,12 @@ For local build (`docker-compose.build.yml`):
             - GPSD_PORT=2947
             - GEOPOINT_LON=38.897809878
             - GEOPOINT_LAT=-77.036551259
+            - PPS_BUCKET_SIZE=50000
+            - PPS_BUCKET_COUNT=40
             - PPS_TIME1=0.123
+            - GEO_BUCKET_SIZE=0.5
+            - GEO_BUCKET_COUNT=40
+            - EXPORTER_PORT=9015
             - VERBOSE=1
             - DEBUG=0
         restart: unless-stopped
