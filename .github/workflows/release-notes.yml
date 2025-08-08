@@ -104,7 +104,7 @@ jobs:
           prerelease: false
 
       - name: Upload release notes artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-notes-${{ steps.tag.outputs.tag }}
           path: RELEASE_NOTES.md
