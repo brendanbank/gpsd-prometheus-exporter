@@ -59,8 +59,6 @@ MSEC=1000
 class DepencendyError(Exception):
     pass
 
-from pkg_resources import parse_version
-
 # Monkey patch to handle JSON encoding issues with newer Python versions
 try:
     # Try to patch the JSON decoder if needed
@@ -74,8 +72,22 @@ except Exception:
     # If patching fails, continue anyway
     pass
 
-if parse_version(gps.__version__) < parse_version("3.18"):
-    raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+# Check gps version using packaging module (modern approach)
+try:
+    from packaging import version
+    if version.parse(gps.__version__) < version.parse("3.18"):
+        raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+except ImportError:
+    # Fallback to simple string comparison if packaging not available
+    try:
+        gps_version = gps.__version__.split('.')
+        if len(gps_version) >= 2:
+            major, minor = int(gps_version[0]), int(gps_version[1])
+            if major < 3 or (major == 3 and minor < 18):
+                raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+    except (ValueError, AttributeError):
+        # If version check fails, continue anyway
+        pass
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
