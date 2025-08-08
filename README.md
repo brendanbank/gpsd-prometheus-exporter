@@ -82,9 +82,19 @@ The easiest way to run the exporter is using Docker.
 
 ```bash
 docker run -d --name gpsd-exporter \
+    --network=host \
     -p 9015:9015 \
     -e GPSD_HOST=localhost \
     -e GPSD_PORT=2947 \
+    -e GEOPOINT_LON=38.897809878 \
+    -e GEOPOINT_LAT=-77.036551259 \
+    -e PPS_BUCKET_SIZE=50000 \
+    -e PPS_BUCKET_COUNT=40 \
+    -e GEO_BUCKET_SIZE=0.5 \
+    -e GEO_BUCKET_COUNT=40 \
+    -e EXPORTER_PORT=9015 \
+    -e VERBOSE=1 \
+    -e DEBUG=0 \
     ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
 ```
 
@@ -100,6 +110,117 @@ docker compose up -d
 **Building Locally** (`docker-compose.build.yml`):
 ```bash
 docker compose -f docker-compose.build.yml up --build
+```
+
+**Example configurations:**
+
+**Pre-built Image** (`docker-compose.yml`):
+```yaml
+services:
+  gpsd-exporter:
+    image: ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+    container_name: gpsd-exporter
+    ports:
+      - "${EXPORTER_PORT:-9015}:9015"
+    environment:
+      - GPSD_HOST=${GPSD_HOST:-host.docker.internal}
+      - GPSD_PORT=${GPSD_PORT:-2947}
+      - GEOPOINT_LON=${GEOPOINT_LON:-38.897809878}
+      - GEOPOINT_LAT=${GEOPOINT_LAT:--77.036551259}
+      - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-50000}
+      - PPS_BUCKET_COUNT=${PPS_BUCKET_COUNT:-40}
+      - PPS_TIME1=${PPS_TIME1}
+      - GEO_BUCKET_SIZE=${GEO_BUCKET_SIZE:-0.5}
+      - GEO_BUCKET_COUNT=${GEO_BUCKET_COUNT:-40}
+      - EXPORTER_PORT=${EXPORTER_PORT:-9015}
+      - DEBUG=${DEBUG:-0}
+      - VERBOSE=${VERBOSE:-1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    network_mode: host
+```
+
+**Local Build** (`docker-compose.build.yml`):
+```yaml
+services:
+  gpsd-exporter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gpsd-prometheus-exporter:stable
+    container_name: gpsd-exporter
+    ports:
+      - "${EXPORTER_PORT:-9015}:9015"
+    environment:
+      - GPSD_HOST=${GPSD_HOST:-localhost}
+      - GPSD_PORT=${GPSD_PORT:-2947}
+      - GEOPOINT_LON=${GEOPOINT_LON:-38.897809878}
+      - GEOPOINT_LAT=${GEOPOINT_LAT:--77.036551259}
+      - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-50000}
+      - PPS_BUCKET_COUNT=${PPS_BUCKET_COUNT:-40}
+      - PPS_TIME1=${PPS_TIME1}
+      - GEO_BUCKET_SIZE=${GEO_BUCKET_SIZE:-0.5}
+      - GEO_BUCKET_COUNT=${GEO_BUCKET_COUNT:-40}
+      - EXPORTER_PORT=${EXPORTER_PORT:-9015}
+      - DEBUG=${DEBUG:-0}
+      - VERBOSE=${VERBOSE:-1}
+    restart: unless-stopped
+    network_mode: host
+```
+
+#### Host Network Configuration
+
+- Linux (supports host networking):
+
+```bash
+docker run -d --name gpsd-exporter \
+  --network=host \
+  -e GPSD_HOST=localhost \
+  -e GPSD_PORT=2947 \
+  ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+
+# Access metrics directly on the host
+curl 127.0.0.1:9015
+```
+
+Docker Compose on Linux can use `network_mode: host` (as shown in the examples above). When using host networking, omit any `ports:` mappings as they are ignored.
+
+- macOS (host networking is not supported):
+
+```bash
+docker run -d --name gpsd-exporter \
+  -p 9015:9015 \
+  -e GPSD_HOST=host.docker.internal \
+  -e GPSD_PORT=2947 \
+  ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+
+# Access metrics via the published port
+curl 127.0.0.1:9015
+```
+
+For Docker Compose on macOS, remove `network_mode: host`, keep `ports:` and `extra_hosts`, and set `GPSD_HOST=host.docker.internal`:
+
+```yaml
+services:
+  gpsd-exporter:
+    ports:
+      - "9015:9015"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - GPSD_HOST=host.docker.internal
+      - GPSD_PORT=2947
+```
+
+Remote gpsd (any OS): If your gpsd runs on a remote host (e.g., `ntp0.bgwlan.nl`), host networking is not required. Publish the port and point `GPSD_HOST` to the remote server:
+
+```bash
+docker run -d --name gpsd-exporter \
+  -p 9015:9015 \
+  -e GPSD_HOST=ntp0.bgwlan.nl \
+  -e GPSD_PORT=2947 \
+  ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
 ```
 
 #### Environment Variables
@@ -139,37 +260,6 @@ EXPORTER_PORT=9015
 VERBOSE=1
 DEBUG=0
 EOF
-```
-
-#### Host Network Configuration
-
-If gpsd runs directly on the host, use host networking:
-
-```bash
-# Docker CLI
-docker run -d --name gpsd-exporter \
-    --network=host \
-    -e GPSD_HOST=localhost \
-    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
-
-# Docker Compose
-network_mode: host
-```
-
-Or use `host.docker.internal` for container networking:
-
-```bash
-# Docker CLI
-docker run -d --name gpsd-exporter \
-    -e GPSD_HOST=host.docker.internal \
-    --add-host=host.docker.internal:host-gateway \
-    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
-
-# Docker Compose
-extra_hosts:
-    - "host.docker.internal:host-gateway"
-environment:
-    - GPSD_HOST=host.docker.internal
 ```
 
 ### Native Installation
@@ -294,28 +384,6 @@ Build the Docker image locally with enhanced features:
 
 ```bash
 docker compose -f docker-compose.build.yml up --build
-```
-
-### Custom Configuration
-
-Advanced configuration with all features enabled:
-
-```bash
-docker run -d --name gpsd-exporter \
-    -p 9015:9015 \
-    -e GPSD_HOST=192.168.1.10 \
-    -e GPSD_PORT=2947 \
-    -e GEOPOINT_LON=38.897809878 \
-    -e GEOPOINT_LAT=-77.036551259 \
-    -e PPS_BUCKET_SIZE=50000 \
-    -e PPS_BUCKET_COUNT=40 \
-    -e PPS_TIME1=0.123 \
-    -e GEO_BUCKET_SIZE=0.5 \
-    -e GEO_BUCKET_COUNT=40 \
-    -e EXPORTER_PORT=9015 \
-    -e VERBOSE=1 \
-    -e DEBUG=0 \
-    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
 ```
 
 ### Prometheus Integration
