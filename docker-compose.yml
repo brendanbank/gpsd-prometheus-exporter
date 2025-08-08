@@ -2,7 +2,7 @@ version: "3"
 services:
 
   gpsd-exporter:
-    image: ghcr.io/ncareau/gpsd-prometheus-exporter:latest
+    image: ghcr.io/YOUR_GITHUB_USERNAME/gpsd-prometheus-exporter:latest
     container_name: gpsd-exporter
     ports:
       - "${EXPORTER_PORT:-9015}:9015"

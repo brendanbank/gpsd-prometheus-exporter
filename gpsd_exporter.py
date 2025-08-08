@@ -61,7 +61,9 @@ class DepencendyError(Exception):
 from pkg_resources import parse_version
 
 if parse_version(gps.__version__) < parse_version("3.18"):
-    raise DepencendyError('Please upgrade the python gps package to 2.19 or higher.')
+    raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+elif parse_version(gps.__version__) > parse_version("3.25"):
+    raise DepencendyError('Please use python gps package version 3.25 or lower. Current version: ' + gps.__version__)
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''

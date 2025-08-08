@@ -1,7 +1,7 @@
 FROM python:alpine3.10
 
 RUN pip install prometheus_client
-RUN pip install gps
+RUN pip install gps==3.25
 
 WORKDIR /app
 
