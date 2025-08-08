@@ -301,3 +301,4 @@ or by adding `host.docker.internal` to connect the host
     environment:
         - GPSD_HOST=host.docker.internal
 
+Good Luck!
