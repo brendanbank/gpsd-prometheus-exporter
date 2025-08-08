@@ -131,17 +131,22 @@ def main(argv=None):  # IGNORE:C0111
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_license = '''%s
 
-  Created by Brendan Bank on %s.
-  Copyright 2021 Brendan Bank. All rights reserved.
+Created by Brendan Bank on %s.
 
-  Licensed under the BSD-3-Clause
-  https://opensource.org/licenses/BSD-3-Clause
+Copyright 2021 Brendan Bank. All rights reserved.
 
-  Distributed on an "AS IS" basis without warranties
-  or conditions of any kind, either express or implied.
+Licensed under the BSD-3-Clause
+https://opensource.org/licenses/BSD-3-Clause
 
-USAGE
-''' % (program_shortdesc, str(__date__))
+Distributed on an "AS IS" basis without warranties
+or conditions of any kind, either express or implied.
+
+Version: %s
+
+Version Date: %s
+
+Usage:
+''' % (program_shortdesc, str(__date__), program_version, program_build_date)
 
     try:
         # Setup argument parser
