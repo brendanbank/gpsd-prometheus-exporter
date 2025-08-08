@@ -15,13 +15,13 @@ It connects to the TCP port of the GPSD daemon and records relevant statistics a
 Make sure gpsd, prometheus and grafana are properly running. `gpsd-prometheus-exporter`needs `python3` and the following python libraries:
 
 * [prometheus_client](https://github.com/prometheus/client_python)
-* gps-python libraries [gps](https://gpsd.gitlab.io/gpsd/) Note that this exporter requires gps version 3.25 specifically for compatibility. 
+* gps-python libraries [gps](https://gpsd.gitlab.io/gpsd/) Note that this exporter requires gps version 3.19 specifically for compatibility. 
 
 To install:
 
 	apt update
 	apt install python3-prometheus-client
-	pip install gps==3.25
+	pip install gps==3.19
 
 If you want the `gpsd-prometheus-exporter` to be loaded automatically by `systemd` please copy `gpsd_monitor.defaults` to 
 `/etc/default/gpsd_monitor.defaults` and `gpsd_monitor.service` to `/lib/systemd/system`

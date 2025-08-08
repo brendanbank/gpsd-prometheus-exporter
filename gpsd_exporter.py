@@ -26,6 +26,7 @@ import pwd
 import grp
 import queue
 import socket
+import json
 
 import logging
 from prometheus_client import Histogram, CollectorRegistry, start_http_server, Gauge, Info
@@ -60,10 +61,23 @@ class DepencendyError(Exception):
 
 from pkg_resources import parse_version
 
+# Monkey patch to handle JSON encoding issues with newer Python versions
+try:
+    # Try to patch the JSON decoder if needed
+    original_init = json.JSONDecoder.__init__
+    def patched_init(self, *args, **kwargs):
+        # Remove encoding parameter if present (deprecated in Python 3.9+)
+        kwargs.pop('encoding', None)
+        return original_init(self, *args, **kwargs)
+    json.JSONDecoder.__init__ = patched_init
+except Exception:
+    # If patching fails, continue anyway
+    pass
+
 if parse_version(gps.__version__) < parse_version("3.18"):
     raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
-elif parse_version(gps.__version__) > parse_version("3.25"):
-    raise DepencendyError('Please use python gps package version 3.25 or lower. Current version: ' + gps.__version__)
+elif parse_version(gps.__version__) > parse_version("3.19"):
+    raise DepencendyError('Please use python gps package version 3.19 or lower. Current version: ' + gps.__version__)
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
@@ -503,7 +517,7 @@ def loop_connection(metrics, args):
             getPositionData(gpsd, metrics, args)
         except KeyboardInterrupt:
             log.info("Received keyboard interrupt, shutting down...")
-            raise  # Re-raise KeyboardInterrupt to be caught by main loop
+            running = False
         except Exception as e:
             log.error(f"Unexpected error in main loop: {e}")
             # Continue running to avoid crashing the container
