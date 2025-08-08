@@ -50,7 +50,7 @@ GPSD_PORT = 2947
 EXPORTER_PORT = 9015
 DEFAULT_HOST = 'localhost'
 DEFAULT_TIMEOUT = 10  # Default connection timeout in seconds
-DEFAULT_RETRY_DELAY = 5  # Default initial retry delay in seconds
+DEFAULT_RETRY_DELAY = 10  # Default initial retry delay in seconds
 DEFAULT_MAX_RETRY_DELAY = 300  # Maximum retry delay in seconds (5 minutes)
 NSEC=1000000000
 USEC=1000000
@@ -76,8 +76,6 @@ except Exception:
 
 if parse_version(gps.__version__) < parse_version("3.18"):
     raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
-elif parse_version(gps.__version__) > parse_version("3.19"):
-    raise DepencendyError('Please use python gps package version 3.19 or lower. Current version: ' + gps.__version__)
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
@@ -216,12 +214,13 @@ USAGE
             except (KeyboardInterrupt):
                 print ("Applications closed!")
                 return(0)
-            except (StopIteration, ConnectionRefusedError, socket.timeout) as e:
+            except (StopIteration, ConnectionRefusedError, socket.timeout, ConnectionError, OSError) as e:
                 retry_count += 1
                 log.error(f'Connection to gpsd failed (attempt {retry_count}): {e}')
                 
                 print(f'WARNING: Connection failed (attempt {retry_count}), retrying in {current_delay}s...')
                 print(f'Connection error: {e}')
+                print(f'Error type: {type(e).__name__}')
                 
                 time.sleep(current_delay)
                 
@@ -350,9 +349,16 @@ def getPositionData(gpsd, metrics, args):
         # Handle missing satellite data fields (like 'az', 'el', etc.)
         log.warning(f"GPSD reported incomplete satellite data: {e}")
         return
+    except (ConnectionError, OSError, socket.error) as e:
+        # Handle connection errors - re-raise to trigger retry
+        log.error(f"Connection error reading from GPSD: {e}")
+        raise
     except Exception as e:
         # Handle other GPSD connection or data parsing errors
         log.error(f"Error reading from GPSD: {e}")
+        # Re-raise connection-related errors to trigger retry
+        if "connection" in str(e).lower() or "socket" in str(e).lower():
+            raise
         return
     
     # For a list of all supported classes and fields refer to:
