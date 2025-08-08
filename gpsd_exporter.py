@@ -25,6 +25,8 @@ import math
 import pwd
 import grp
 import queue
+import socket
+import json
 
 import logging
 from prometheus_client import Histogram, CollectorRegistry, start_http_server, Gauge, Info
@@ -47,6 +49,9 @@ PROFILE = 0
 GPSD_PORT = 2947
 EXPORTER_PORT = 9015
 DEFAULT_HOST = 'localhost'
+DEFAULT_TIMEOUT = 10  # Default connection timeout in seconds
+DEFAULT_RETRY_DELAY = 10  # Default initial retry delay in seconds
+DEFAULT_MAX_RETRY_DELAY = 300  # Maximum retry delay in seconds (5 minutes)
 NSEC=1000000000
 USEC=1000000
 MSEC=1000
@@ -54,10 +59,35 @@ MSEC=1000
 class DepencendyError(Exception):
     pass
 
-from pkg_resources import parse_version
+# Monkey patch to handle JSON encoding issues with newer Python versions
+try:
+    # Try to patch the JSON decoder if needed
+    original_init = json.JSONDecoder.__init__
+    def patched_init(self, *args, **kwargs):
+        # Remove encoding parameter if present (deprecated in Python 3.9+)
+        kwargs.pop('encoding', None)
+        return original_init(self, *args, **kwargs)
+    json.JSONDecoder.__init__ = patched_init
+except Exception:
+    # If patching fails, continue anyway
+    pass
 
-if parse_version(gps.__version__) < parse_version("3.18"):
-    raise DepencendyError('Please upgrade the python gps package to 2.19 or higher.')
+# Check gps version using packaging module (modern approach)
+try:
+    from packaging import version
+    if version.parse(gps.__version__) < version.parse("3.18"):
+        raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+except ImportError:
+    # Fallback to simple string comparison if packaging not available
+    try:
+        gps_version = gps.__version__.split('.')
+        if len(gps_version) >= 2:
+            major, minor = int(gps_version[0]), int(gps_version[1])
+            if major < 3 or (major == 3 and minor < 18):
+                raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+    except (ValueError, AttributeError):
+        # If version check fails, continue anyway
+        pass
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
@@ -129,6 +159,14 @@ USAGE
         parser.add_argument('-E', '--exporter-port', type=int, dest="exporter_port", default=EXPORTER_PORT,
                             help="set TCP Port for the exporter server [default: %(default)s]")
         
+        parser.add_argument('-t', '--timeout', type=int, dest="timeout", default=DEFAULT_TIMEOUT,
+                            help="set connection timeout in seconds [default: %(default)s]")
+        
+        parser.add_argument('--retry-delay', type=int, dest="retry_delay", default=DEFAULT_RETRY_DELAY,
+                            help="initial retry delay in seconds [default: %(default)s]")
+        parser.add_argument('--max-retry-delay', type=int, dest="max_retry_delay", default=DEFAULT_MAX_RETRY_DELAY,
+                            help="maximum retry delay in seconds [default: %(default)s]")
+        
         parser.add_argument('-S', '--disable-monitor-satellites', dest="mon_satellites", 
                             default=True, action="store_false",
                             help="Stops monitoring all satellites individually")
@@ -175,18 +213,36 @@ USAGE
         
         start_http_server(args.exporter_port, registry=metrics['registry'])
         
+        retry_count = 0
+        current_delay = args.retry_delay
+        
         while True:
             try:
                 loop_connection(metrics, args)
+                # If we get here, connection was successful, reset retry count
+                retry_count = 0
+                current_delay = args.retry_delay
+                
             except (KeyboardInterrupt):
                 print ("Applications closed!")
                 return(0)
-            except (StopIteration,ConnectionRefusedError) as e:
-                print (f'Connection broke, something happened {e}')
-            
-            print ('sleep for 5....')
-            
-            time.sleep(5)
+            except (StopIteration, ConnectionRefusedError, socket.timeout, ConnectionError, OSError) as e:
+                retry_count += 1
+                log.error(f'Connection to gpsd failed (attempt {retry_count}): {e}')
+                
+                print(f'WARNING: Connection failed (attempt {retry_count}), retrying in {current_delay}s...')
+                print(f'Connection error: {e}')
+                print(f'Error type: {type(e).__name__}')
+                
+                time.sleep(current_delay)
+                
+                # Exponential backoff with maximum delay
+                current_delay = min(current_delay * 2, args.max_retry_delay)
+                
+            except Exception as e:
+                log.error(f'Unexpected error in main loop: {e}')
+                print(f'ERROR: Unexpected error: {e}')
+                return(1)
 
                 
         return 0
@@ -299,7 +355,23 @@ def init_metrics(args):
 
 
 def getPositionData(gpsd, metrics, args):
-    nx = gpsd.next()
+    try:
+        nx = gpsd.next()
+    except KeyError as e:
+        # Handle missing satellite data fields (like 'az', 'el', etc.)
+        log.warning(f"GPSD reported incomplete satellite data: {e}")
+        return
+    except (ConnectionError, OSError, socket.error) as e:
+        # Handle connection errors - re-raise to trigger retry
+        log.error(f"Connection error reading from GPSD: {e}")
+        raise
+    except Exception as e:
+        # Handle other GPSD connection or data parsing errors
+        log.error(f"Error reading from GPSD: {e}")
+        # Re-raise connection-related errors to trigger retry
+        if "connection" in str(e).lower() or "socket" in str(e).lower():
+            raise
+        return
     
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
@@ -436,15 +508,38 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 def loop_connection(metrics, args):
 
-    gpsd = gps.gps(host=args.hostname, port=args.port, verbose=1, mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE | gps.WATCH_SCALED)
-    drop_privileges()
-    
-    if not (gpsd):
-        log.critical('Could not connect')
-        return(None)
+    try:
+        # Set socket timeout for the connection
+        socket.setdefaulttimeout(args.timeout)
+        
+        log.info(f'Attempting to connect to gpsd at {args.hostname}:{args.port} with {args.timeout}s timeout')
+        gpsd = gps.gps(host=args.hostname, port=args.port, verbose=1, mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE | gps.WATCH_SCALED)
+        drop_privileges()
+        
+        if not gpsd:
+            log.critical(f'Could not connect to gpsd at {args.hostname}:{args.port}')
+            raise ConnectionRefusedError(f'Failed to establish connection to gpsd at {args.hostname}:{args.port}')
+            
+    except socket.timeout:
+        log.critical(f'Connection to gpsd at {args.hostname}:{args.port} timed out after {args.timeout}s')
+        raise ConnectionRefusedError(f'Connection timeout after {args.timeout}s')
+    except ConnectionRefusedError:
+        # Re-raise to be caught by the main loop
+        raise
+    except Exception as e:
+        log.critical(f'Unexpected error connecting to gpsd: {e}')
+        raise ConnectionRefusedError(f'Failed to connect to gpsd: {e}')
     running = True
     while running:
-        getPositionData(gpsd, metrics, args)
+        try:
+            getPositionData(gpsd, metrics, args)
+        except KeyboardInterrupt:
+            log.info("Received keyboard interrupt, shutting down...")
+            raise
+        except Exception as e:
+            log.error(f"Unexpected error in main loop: {e}")
+            # Continue running to avoid crashing the container
+            continue
 
 class SatCollector(object):
     
@@ -469,23 +564,41 @@ class SatCollector(object):
         last_measurement = {}
         
         while not sat_queue.empty():
-            measurement = sat_queue.get()
-            log.debug(f'measurement:: {measurement}')            
+            try:
+                measurement = sat_queue.get()
+                log.debug(f'measurement:: {measurement}')            
 
-            sat = measurement['sat']
-            ts = measurement['ts']
-            
-            last_measurement[sat['PRN']] = sat
+                sat = measurement['sat']
+                ts = measurement['ts']
+                
+                last_measurement[sat['PRN']] = sat
+            except KeyError as e:
+                # Handle missing satellite data fields
+                log.warning(f"Skipping satellite measurement due to missing field: {e}")
+                continue
+            except Exception as e:
+                # Handle other satellite measurement processing errors
+                log.error(f"Error processing satellite measurement: {e}")
+                continue
             
         
         log.debug(f'last_measurement {last_measurement}')
             
         for sat in last_measurement.keys():
             log.debug(f'sat:: {last_measurement[sat]}')
-            for key in metrics.keys():
-                sat_dict = last_measurement[sat]
-                if key in sat_dict.keys():
-                    metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid']), str(sat_dict['used'])], sat_dict[key]) 
+            try:
+                for key in metrics.keys():
+                    sat_dict = last_measurement[sat]
+                    if key in sat_dict.keys():
+                        metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid']), str(sat_dict['used'])], sat_dict[key])
+            except KeyError as e:
+                # Handle missing satellite data fields
+                log.warning(f"Skipping satellite metrics due to missing field: {e}")
+                continue
+            except Exception as e:
+                # Handle other satellite metrics processing errors
+                log.error(f"Error processing satellite metrics: {e}")
+                continue 
                 
         
         for key in metrics:
@@ -495,13 +608,21 @@ class SatCollector(object):
 def add_sat_stats(satellites):
     
     for sat in satellites:
-        
-        ts = time.time()
-        ts_new = int(ts)
-        
-        # print (f'ts {ts} ts_new {ts_new}' )
-        
-        sat_queue.put({'sat': sat, 'ts': ts})
+        try:
+            ts = time.time()
+            ts_new = int(ts)
+            
+            # print (f'ts {ts} ts_new {ts_new}' )
+            
+            sat_queue.put({'sat': sat, 'ts': ts})
+        except KeyError as e:
+            # Handle missing satellite data fields
+            log.warning(f"Skipping satellite with missing data field: {e}")
+            continue
+        except Exception as e:
+            # Handle other satellite data processing errors
+            log.error(f"Error processing satellite data: {e}")
+            continue
     
     """ Keep the queue managable. """
        

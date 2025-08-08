@@ -2,7 +2,10 @@
 
 EXPORTER_ARGS=""
 
-[[ -z "${DEBUG}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} -d"
+[[ "${DEBUG}" != "0" && -n "${DEBUG}" ]] && EXPORTER_ARGS="${EXPORTER_ARGS} -d"
+
+# Add verbose flag if VERBOSE is set
+[[ -n "${VERBOSE}" ]] && EXPORTER_ARGS="${EXPORTER_ARGS} -v"
 
 [[ -z "${GPSD_HOST}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --hostname ${GPSD_HOST}"
 [[ -z "${GPSD_PORT}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --port ${GPSD_PORT}"
@@ -17,6 +20,9 @@ EXPORTER_ARGS=""
 [[ -z "${PPS_BUCKET_SIZE}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --pps-bucket-size ${PPS_BUCKET_SIZE}"
 [[ -z "${PPS_BUCKET_COUNT}" ]] || EXPORTER_ARGS="${EXPORTER_ARGS} --pps-bucket-count ${PPS_BUCKET_COUNT}"
 
-echo ./gpsd_exporter.py -v --pps-histogram --offset-from-geopoint $EXPORTER_ARGS
-./gpsd_exporter.py -v --pps-histogram --offset-from-geopoint $EXPORTER_ARGS
+# Add PPS histogram support if PPS_TIME1 is set
+[[ -n "${PPS_TIME1}" ]] && EXPORTER_ARGS="${EXPORTER_ARGS} --pps-histogram --pps-time1 ${PPS_TIME1}"
+
+echo ./gpsd_exporter.py --offset-from-geopoint $EXPORTER_ARGS
+./gpsd_exporter.py --offset-from-geopoint $EXPORTER_ARGS
 

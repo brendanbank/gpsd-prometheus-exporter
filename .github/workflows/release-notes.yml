@@ -1,0 +1,110 @@
+name: Generate Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to generate release notes for'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  generate-release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # First release, compare with initial commit
+            COMMITS=$(git log --oneline --no-merges --reverse main --not $(git rev-list --max-parents=0 HEAD) | head -20)
+            echo "## What's New in $TAG" > RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "### Initial Release" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "This is the initial release of gpsd-prometheus-exporter." >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "### Key Features:" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "$COMMITS" | while read -r commit; do
+              if [ ! -z "$commit" ]; then
+                echo "- $commit" >> RELEASE_NOTES.md
+              fi
+            done
+          else
+            # Compare with previous tag
+            COMMITS=$(git log --oneline --no-merges $PREVIOUS_TAG..HEAD)
+            echo "## What's New in $TAG" > RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "### Changes since $PREVIOUS_TAG" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "$COMMITS" | while read -r commit; do
+              if [ ! -z "$commit" ]; then
+                echo "- $commit" >> RELEASE_NOTES.md
+              fi
+            done
+          fi
+          
+          # Add Docker image information
+          echo "" >> RELEASE_NOTES.md
+          echo "### Docker Image" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "The Docker image is available at:" >> RELEASE_NOTES.md
+          echo "\`\`\`bash" >> RELEASE_NOTES.md
+          echo "ghcr.io/brendanbank/gpsd-prometheus-exporter:$TAG" >> RELEASE_NOTES.md
+          echo "\`\`\`" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          
+          # Add usage example
+          echo "### Usage" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "\`\`\`bash" >> RELEASE_NOTES.md
+          echo "docker run -d \\" >> RELEASE_NOTES.md
+          echo "  --name gpsd-exporter \\" >> RELEASE_NOTES.md
+          echo "  -p 9015:9015 \\" >> RELEASE_NOTES.md
+          echo "  -e GPSD_HOST=host.docker.internal \\" >> RELEASE_NOTES.md
+          echo "  ghcr.io/brendanbank/gpsd-prometheus-exporter:$TAG" >> RELEASE_NOTES.md
+          echo "\`\`\`" >> RELEASE_NOTES.md
+          
+          # Read the generated notes
+          RELEASE_NOTES=$(cat RELEASE_NOTES.md)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          release_name: Release ${{ steps.tag.outputs.tag }}
+          body: ${{ steps.release_notes.outputs.notes }}
+          draft: false
+          prerelease: false
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-notes-${{ steps.tag.outputs.tag }}
+          path: RELEASE_NOTES.md
