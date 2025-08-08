@@ -98,7 +98,7 @@ jobs:
           echo "  -e EXPORTER_PORT=9015 \\" >> RELEASE_NOTES.md
           echo "  -e VERBOSE=1 \\" >> RELEASE_NOTES.md
           echo "  -e DEBUG=0 \\" >> RELEASE_NOTES.md
-          echo "  ghcr.io/brendanbank/gpsd-prometheus-exporter:$TAG" >> RELEASE_NOTES.md
+          echo "  ghcr.io/brendanbank/gpsd-prometheus-exporter:latest" >> RELEASE_NOTES.md
           echo "\`\`\`" >> RELEASE_NOTES.md
           
           # Read the generated notes
