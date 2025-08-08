@@ -327,16 +327,6 @@ For local build (`docker-compose.build.yml`):
         restart: unless-stopped
         network_mode: host
 
-### Enhanced Features (Local Build)
-
-The `docker-compose.build.yml` includes enhanced features:
-
-- **Infinite retry with exponential backoff**: Automatically retries connection to gpsd
-- **Connection timeout**: Configurable timeout (default 10s)
-- **Improved error handling**: Clear error messages, proper exit codes, and robust connection failure recovery
-- **Robust connection management**: Properly handles closed sockets, connection failures, and any GPSD read errors
-- **Environment variable control**: All features controllable via environment variables
-- **Host networking**: Direct access to host services via `network_mode: host`
 
 ### GPSd on Host
 
