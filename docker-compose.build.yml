@@ -14,7 +14,7 @@ services:
       - GEOPOINT_LON=${GEOPOINT_LON:-38.897809878}
       - GEOPOINT_LAT=${GEOPOINT_LAT:--77.036551259}
       - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-50000}
-      - DEBUG=${DEBUG}
+      - DEBUG=${DEBUG:-0}
     restart: unless-stopped
     network_mode: host
     
