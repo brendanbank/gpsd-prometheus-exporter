@@ -299,7 +299,16 @@ def init_metrics(args):
 
 
 def getPositionData(gpsd, metrics, args):
-    nx = gpsd.next()
+    try:
+        nx = gpsd.next()
+    except KeyError as e:
+        # Handle missing satellite data fields (like 'az', 'el', etc.)
+        log.warning(f"GPSD reported incomplete satellite data: {e}")
+        return
+    except Exception as e:
+        # Handle other GPSD connection or data parsing errors
+        log.error(f"Error reading from GPSD: {e}")
+        return
     
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
@@ -444,7 +453,15 @@ def loop_connection(metrics, args):
         return(None)
     running = True
     while running:
-        getPositionData(gpsd, metrics, args)
+        try:
+            getPositionData(gpsd, metrics, args)
+        except KeyboardInterrupt:
+            log.info("Received keyboard interrupt, shutting down...")
+            running = False
+        except Exception as e:
+            log.error(f"Unexpected error in main loop: {e}")
+            # Continue running to avoid crashing the container
+            continue
 
 class SatCollector(object):
     
@@ -469,23 +486,41 @@ class SatCollector(object):
         last_measurement = {}
         
         while not sat_queue.empty():
-            measurement = sat_queue.get()
-            log.debug(f'measurement:: {measurement}')            
+            try:
+                measurement = sat_queue.get()
+                log.debug(f'measurement:: {measurement}')            
 
-            sat = measurement['sat']
-            ts = measurement['ts']
-            
-            last_measurement[sat['PRN']] = sat
+                sat = measurement['sat']
+                ts = measurement['ts']
+                
+                last_measurement[sat['PRN']] = sat
+            except KeyError as e:
+                # Handle missing satellite data fields
+                log.warning(f"Skipping satellite measurement due to missing field: {e}")
+                continue
+            except Exception as e:
+                # Handle other satellite measurement processing errors
+                log.error(f"Error processing satellite measurement: {e}")
+                continue
             
         
         log.debug(f'last_measurement {last_measurement}')
             
         for sat in last_measurement.keys():
             log.debug(f'sat:: {last_measurement[sat]}')
-            for key in metrics.keys():
-                sat_dict = last_measurement[sat]
-                if key in sat_dict.keys():
-                    metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid']), str(sat_dict['used'])], sat_dict[key]) 
+            try:
+                for key in metrics.keys():
+                    sat_dict = last_measurement[sat]
+                    if key in sat_dict.keys():
+                        metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid']), str(sat_dict['used'])], sat_dict[key])
+            except KeyError as e:
+                # Handle missing satellite data fields
+                log.warning(f"Skipping satellite metrics due to missing field: {e}")
+                continue
+            except Exception as e:
+                # Handle other satellite metrics processing errors
+                log.error(f"Error processing satellite metrics: {e}")
+                continue 
                 
         
         for key in metrics:
@@ -495,13 +530,21 @@ class SatCollector(object):
 def add_sat_stats(satellites):
     
     for sat in satellites:
-        
-        ts = time.time()
-        ts_new = int(ts)
-        
-        # print (f'ts {ts} ts_new {ts_new}' )
-        
-        sat_queue.put({'sat': sat, 'ts': ts})
+        try:
+            ts = time.time()
+            ts_new = int(ts)
+            
+            # print (f'ts {ts} ts_new {ts_new}' )
+            
+            sat_queue.put({'sat': sat, 'ts': ts})
+        except KeyError as e:
+            # Handle missing satellite data fields
+            log.warning(f"Skipping satellite with missing data field: {e}")
+            continue
+        except Exception as e:
+            # Handle other satellite data processing errors
+            log.error(f"Error processing satellite data: {e}")
+            continue
     
     """ Keep the queue managable. """
        
