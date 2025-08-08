@@ -20,7 +20,6 @@ This guide explains how to publish the gpsd-prometheus-exporter Docker image to 
 - **Repository permissions**:
   - `Contents`: Read and write
   - `Metadata`: Read-only
-  - `Packages`: Read and write
   - `Pull requests`: Read and write
   - `Workflows`: Read and write
 
@@ -32,6 +31,10 @@ This guide explains how to publish the gpsd-prometheus-exporter Docker image to 
 2. Click "New repository secret"
 3. Name: `FINE_GRAINED_TOKEN`
 4. Value: Paste your fine-grained token
+
+### 3. Enable Package Publishing
+
+The workflow uses the built-in `GITHUB_TOKEN` for package publishing, which is automatically provided by GitHub Actions and has the necessary permissions for the repository.
 
 ## CI/CD Pipeline Features
 
@@ -101,6 +104,7 @@ services:
 2. **Time-limited**: Automatic expiration
 3. **Granular control**: Exact permissions needed
 4. **Audit trail**: Clear logging of token usage
+5. **No cross-repo access**: Cannot access other repositories
 
 ## Troubleshooting
 
@@ -108,6 +112,7 @@ services:
 - Ensure token has correct repository permissions
 - Check token expiration
 - Verify token is stored as `FINE_GRAINED_TOKEN` secret
+- Ensure repository has package publishing enabled
 
 ### Build Issues
 - Check GitHub Actions logs for detailed error messages
