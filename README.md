@@ -191,6 +191,14 @@ You can run this software with docker.
         -e GPSD_PORT=2947 \
         -e GEOPOINT_LON=38.897809878 \
         -e GEOPOINT_LAT=-77.036551259 \
+        -e PPS_BUCKET_SIZE=50000 \
+        -e PPS_BUCKET_COUNT=40 \
+        -e PPS_TIME1=0.123 \
+        -e GEO_BUCKET_SIZE=0.5 \
+        -e GEO_BUCKET_COUNT=40 \
+        -e EXPORTER_PORT=9015 \
+        -e VERBOSE=1 \
+        -e DEBUG=0 \
         ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
 
 ### Docker Compose
