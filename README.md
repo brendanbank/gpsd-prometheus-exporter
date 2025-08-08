@@ -20,7 +20,6 @@ A [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitl
     - [Host Network Configuration](#host-network-configuration)
   - [Native Installation](#native-installation)
 - [Configuration](#configuration)
-  - [Environment Variables](#environment-variables)
   - [Command Line Options](#command-line-options)
 - [Usage Examples](#usage-examples)
   - [Basic Docker Setup](#basic-docker-setup)
@@ -104,6 +103,23 @@ docker compose -f docker-compose.build.yml up --build
 ```
 
 #### Environment Variables
+
+The following environment variables are supported for Docker deployments:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GPSD_HOST` | `localhost` | gpsd hostname/IP address |
+| `GPSD_PORT` | `2947` | gpsd TCP port |
+| `EXPORTER_PORT` | `9015` | Prometheus exporter port |
+| `GEOPOINT_LON` | `38.897809878` | Reference longitude for offset calculation |
+| `GEOPOINT_LAT` | `-77.036551259` | Reference latitude for offset calculation |
+| `PPS_BUCKET_SIZE` | `50000` | PPS histogram bucket size in nanoseconds |
+| `PPS_TIME1` | (not set) | PPS time1 offset (enables PPS histogram when set) |
+| `VERBOSE` | `1` | Enable verbose output (any value = verbose) |
+| `DEBUG` | `0` | Debug level (0 = no debug, 1+ = debug) |
+| `GEO_BUCKET_SIZE` | `0.5` | Geo offset histogram bucket size in meters |
+| `GEO_BUCKET_COUNT` | `40` | Geo offset histogram bucket count |
+| `PPS_BUCKET_COUNT` | `40` | PPS histogram bucket count |
 
 Create a `.env` file for configuration:
 
@@ -195,23 +211,6 @@ systemctl start gpsd_exporter.service
 Some U-Blox GPS units require forced 115200 baud. See [gps_setserial.service](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) for boot-time configuration.
 
 ## Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GPSD_HOST` | `localhost` | gpsd hostname/IP address |
-| `GPSD_PORT` | `2947` | gpsd TCP port |
-| `EXPORTER_PORT` | `9015` | Prometheus exporter port |
-| `GEOPOINT_LON` | `38.897809878` | Reference longitude for offset calculation |
-| `GEOPOINT_LAT` | `-77.036551259` | Reference latitude for offset calculation |
-| `PPS_BUCKET_SIZE` | `50000` | PPS histogram bucket size in nanoseconds |
-| `PPS_TIME1` | (not set) | PPS time1 offset (enables PPS histogram when set) |
-| `VERBOSE` | `1` | Enable verbose output (any value = verbose) |
-| `DEBUG` | `0` | Debug level (0 = no debug, 1+ = debug) |
-| `GEO_BUCKET_SIZE` | `0.5` | Geo offset histogram bucket size in meters |
-| `GEO_BUCKET_COUNT` | `40` | Geo offset histogram bucket count |
-| `PPS_BUCKET_COUNT` | `40` | PPS histogram bucket count |
 
 ### Command Line Options
 
