@@ -31,7 +31,7 @@ jobs:
           sudo rm -f /var/lib/man-db/auto-update || true
           python -m pip install --upgrade pip
           pip install prometheus-client
-          pip install gps
+          # pip install gps
           # Install gpsd python library (may need system packages)
           sudo apt-get update
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-gps
@@ -80,15 +80,15 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/heads/') && (github.ref_name == 'main' || github.ref_name == 'master') }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/heads/') && (github.ref_name == 'develop' || github.ref_name == 'master') }}
 
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          # platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          # platforms: linux/amd64,linux/arm64
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -96,8 +96,6 @@ jobs:
           cache-to: type=gha,mode=max
           sbom: false
           provenance: false
-
-      # Removed provenance attestation to avoid extra UI entries and keep the package page clean
 
     outputs:
       image-digest: ${{ steps.build.outputs.digest }}

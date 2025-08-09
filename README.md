@@ -88,7 +88,7 @@ docker run -d --name gpsd-exporter \
     -e GPSD_PORT=2947 \
     -e GEOPOINT_LON=38.897809878 \
     -e GEOPOINT_LAT=-77.036551259 \
-    -e PPS_BUCKET_SIZE=50000 \
+    -e PPS_BUCKET_SIZE=250 \
     -e PPS_BUCKET_COUNT=40 \
     -e GEO_BUCKET_SIZE=0.5 \
     -e GEO_BUCKET_COUNT=40 \
@@ -127,7 +127,7 @@ services:
       - GPSD_PORT=${GPSD_PORT:-2947}
       - GEOPOINT_LON=${GEOPOINT_LON:-38.897809878}
       - GEOPOINT_LAT=${GEOPOINT_LAT:--77.036551259}
-      - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-50000}
+      - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-250}
       - PPS_BUCKET_COUNT=${PPS_BUCKET_COUNT:-40}
       - PPS_TIME1=${PPS_TIME1}
       - GEO_BUCKET_SIZE=${GEO_BUCKET_SIZE:-0.5}
@@ -157,7 +157,7 @@ services:
       - GPSD_PORT=${GPSD_PORT:-2947}
       - GEOPOINT_LON=${GEOPOINT_LON:-38.897809878}
       - GEOPOINT_LAT=${GEOPOINT_LAT:--77.036551259}
-      - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-50000}
+      - PPS_BUCKET_SIZE=${PPS_BUCKET_SIZE:-250}
       - PPS_BUCKET_COUNT=${PPS_BUCKET_COUNT:-40}
       - PPS_TIME1=${PPS_TIME1}
       - GEO_BUCKET_SIZE=${GEO_BUCKET_SIZE:-0.5}
@@ -234,7 +234,7 @@ The following environment variables are supported for Docker deployments:
 | `EXPORTER_PORT` | `9015` | Prometheus exporter port |
 | `GEOPOINT_LON` | `38.897809878` | Reference longitude for offset calculation |
 | `GEOPOINT_LAT` | `-77.036551259` | Reference latitude for offset calculation |
-| `PPS_BUCKET_SIZE` | `50000` | PPS histogram bucket size in nanoseconds |
+| `PPS_BUCKET_SIZE` | `250` | PPS histogram bucket size in nanoseconds |
 | `PPS_TIME1` | (not set) | PPS time1 offset (enables PPS histogram when set) |
 | `VERBOSE` | `1` | Enable verbose output (any value = verbose) |
 | `DEBUG` | `0` | Debug level (0 = no debug, 1+ = debug) |
@@ -251,7 +251,7 @@ GPSD_HOST=localhost
 GPSD_PORT=2947
 GEOPOINT_LON=38.897809878
 GEOPOINT_LAT=-77.036551259
-PPS_BUCKET_SIZE=50000
+PPS_BUCKET_SIZE=250
 PPS_BUCKET_COUNT=40
 PPS_TIME1=0.123
 GEO_BUCKET_SIZE=0.5

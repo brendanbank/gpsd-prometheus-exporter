@@ -90,7 +90,7 @@ jobs:
           echo "  -e GPSD_PORT=2947 \\" >> RELEASE_NOTES.md
           echo "  -e GEOPOINT_LON=38.897809878 \\" >> RELEASE_NOTES.md
           echo "  -e GEOPOINT_LAT=-77.036551259 \\" >> RELEASE_NOTES.md
-          echo "  -e PPS_BUCKET_SIZE=50000 \\" >> RELEASE_NOTES.md
+          echo "  -e PPS_BUCKET_SIZE=250 \\" >> RELEASE_NOTES.md
           echo "  -e PPS_BUCKET_COUNT=40 \\" >> RELEASE_NOTES.md
           echo "  -e PPS_TIME1=0.123 \\" >> RELEASE_NOTES.md
           echo "  -e GEO_BUCKET_SIZE=0.5 \\" >> RELEASE_NOTES.md
