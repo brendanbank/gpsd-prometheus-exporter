@@ -1,5 +1,8 @@
 FROM debian:trixie-slim
 
+# Prevent debconf from trying to use interactive frontends during build
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Use distro Python and libraries so python3-gps matches the interpreter
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \

@@ -79,8 +79,10 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -91,6 +93,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+
   security-scan:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -98,10 +103,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner (by digest)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-and-push.outputs.image-digest }}
           format: 'sarif'
           output: 'trivy-results.sarif'
 
