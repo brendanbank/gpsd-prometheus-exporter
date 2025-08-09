@@ -54,6 +54,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
@@ -99,7 +100,10 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+          show-summary: true
           provenance: false
           sbom: false
 
