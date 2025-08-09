@@ -2,10 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
     tags: [ 'v*' ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 env:
@@ -19,37 +16,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
+      - name: Install dependencies (distro packages)
         run: |
-          python -m pip install --upgrade pip
-          pip install prometheus-client
-          pip install gps
-          # Install gpsd python library (may need system packages)
           sudo apt-get update
-          sudo apt-get install -y python3-gps
+          sudo apt-get install -y python3-gps python3-prometheus-client
 
       - name: Run basic syntax check
         run: |
           python -m py_compile gpsd_exporter.py
           echo "Syntax check passed"
 
-      - name: Run entrypoint script test
+      - name: CLI help smoke test (system python3 with python3-gps)
         run: |
-          chmod +x entrypoint.sh
-          # Test that entrypoint script doesn't crash
-          ./entrypoint.sh --help || echo "Entrypoint script test completed"
+          python3 --version
+          python3 -c "import gps; print('gps module OK:', gps.__file__)"
+          python3 gpsd_exporter.py --help
 
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
+      id-token: write
       packages: write
+      attestations: write
 
     steps:
       - name: Checkout repository
@@ -70,42 +61,71 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=true
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: Generate build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
 
   security-scan:
     needs: build-and-push
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+      - name: Build image for scanning (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: gpsd-prometheus-exporter:scan
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: gpsd-prometheus-exporter:scan
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
 
   cleanup:
     runs-on: ubuntu-latest
@@ -129,4 +149,3 @@ jobs:
           package-type: container
           min-versions-to-keep: 20
           ignore-versions: '^(latest|v[0-9]+(\.[0-9]+){0,2})$'
-        
