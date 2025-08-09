@@ -33,8 +33,8 @@ jobs:
           pip install prometheus-client
           # pip install gps
           # Install gpsd python library (may need system packages)
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-gps
+          # sudo apt-get update
+          # sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-gps
 
       - name: Run basic syntax check
         run: |
