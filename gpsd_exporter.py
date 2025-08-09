@@ -39,9 +39,9 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 __all__ = []
-__version__ = 0.4
+__version__ = "1.0.8"
 __date__ = '2021-01-10'
-__updated__ = '2023-09-04'
+__updated__ = '2025-08-08'
 
 DEBUG = 1
 TESTRUN = 0
@@ -131,17 +131,22 @@ def main(argv=None):  # IGNORE:C0111
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_license = '''%s
 
-  Created by Brendan Bank on %s.
-  Copyright 2021 Brendan Bank. All rights reserved.
+Created by Brendan Bank on %s.
 
-  Licensed under the BSD-3-Clause
-  https://opensource.org/licenses/BSD-3-Clause
+Copyright 2021 Brendan Bank. All rights reserved.
 
-  Distributed on an "AS IS" basis without warranties
-  or conditions of any kind, either express or implied.
+Licensed under the BSD-3-Clause
+https://opensource.org/licenses/BSD-3-Clause
 
-USAGE
-''' % (program_shortdesc, str(__date__))
+Distributed on an "AS IS" basis without warranties
+or conditions of any kind, either express or implied.
+
+Version: %s
+
+Version Date: %s
+
+Usage:
+''' % (program_shortdesc, str(__date__), program_version, program_build_date)
 
     try:
         # Setup argument parser
@@ -356,22 +361,27 @@ def init_metrics(args):
 
 def getPositionData(gpsd, metrics, args):
     try:
+        # Check if gpsd object is still valid
+        if not gpsd or not hasattr(gpsd, 'next'):
+            log.error("GPSD connection object is invalid")
+            raise ConnectionError("GPSD connection object is invalid")
+            
         nx = gpsd.next()
     except KeyError as e:
         # Handle missing satellite data fields (like 'az', 'el', etc.)
         log.warning(f"GPSD reported incomplete satellite data: {e}")
         return
-    except (ConnectionError, OSError, socket.error) as e:
+    except (ConnectionError, OSError, socket.error, BrokenPipeError, ConnectionResetError) as e:
         # Handle connection errors - re-raise to trigger retry
-        log.error(f"Connection error reading from GPSD: {e}")
+        log.error(f"Connection error reading from GPSD: {type(e).__name__}: {e}")
         raise
     except Exception as e:
         # Handle other GPSD connection or data parsing errors
-        log.error(f"Error reading from GPSD: {e}")
-        # Re-raise connection-related errors to trigger retry
-        if "connection" in str(e).lower() or "socket" in str(e).lower():
-            raise
-        return
+        log.error(f"Error reading from GPSD: {type(e).__name__}: {e}")
+        # For any other exception, assume it might be connection-related and re-raise
+        # This is more aggressive but prevents the endless loop
+        log.error(f"Re-raising unexpected error as connection error: {type(e).__name__}: {e}")
+        raise ConnectionError(f"GPSD read error: {type(e).__name__}: {e}")
     
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
@@ -536,8 +546,12 @@ def loop_connection(metrics, args):
         except KeyboardInterrupt:
             log.info("Received keyboard interrupt, shutting down...")
             raise
+        except (ConnectionError, OSError, socket.error, BrokenPipeError, ConnectionResetError) as e:
+            # Re-raise connection errors to trigger retry in main loop
+            log.error(f"Connection error in data loop: {type(e).__name__}: {e}")
+            raise
         except Exception as e:
-            log.error(f"Unexpected error in main loop: {e}")
+            log.error(f"Unexpected error in main loop: {type(e).__name__}: {e}")
             # Continue running to avoid crashing the container
             continue
 

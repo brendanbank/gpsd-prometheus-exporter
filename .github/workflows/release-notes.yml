@@ -71,6 +71,10 @@ jobs:
           echo "" >> RELEASE_NOTES.md
           echo "The Docker image is available at:" >> RELEASE_NOTES.md
           echo "\`\`\`bash" >> RELEASE_NOTES.md
+          echo "ghcr.io/brendanbank/gpsd-prometheus-exporter:latest" >> RELEASE_NOTES.md
+          echo "\`\`\`" >> RELEASE_NOTES.md
+          echo "Or use the specific tag:" >> RELEASE_NOTES.md
+          echo "\`\`\`" >> RELEASE_NOTES.md
           echo "ghcr.io/brendanbank/gpsd-prometheus-exporter:$TAG" >> RELEASE_NOTES.md
           echo "\`\`\`" >> RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
@@ -81,9 +85,20 @@ jobs:
           echo "\`\`\`bash" >> RELEASE_NOTES.md
           echo "docker run -d \\" >> RELEASE_NOTES.md
           echo "  --name gpsd-exporter \\" >> RELEASE_NOTES.md
-          echo "  -p 9015:9015 \\" >> RELEASE_NOTES.md
-          echo "  -e GPSD_HOST=host.docker.internal \\" >> RELEASE_NOTES.md
-          echo "  ghcr.io/brendanbank/gpsd-prometheus-exporter:$TAG" >> RELEASE_NOTES.md
+          echo "  --network=host \\" >> RELEASE_NOTES.md
+          echo "  -e GPSD_HOST=localhost \\" >> RELEASE_NOTES.md
+          echo "  -e GPSD_PORT=2947 \\" >> RELEASE_NOTES.md
+          echo "  -e GEOPOINT_LON=38.897809878 \\" >> RELEASE_NOTES.md
+          echo "  -e GEOPOINT_LAT=-77.036551259 \\" >> RELEASE_NOTES.md
+          echo "  -e PPS_BUCKET_SIZE=50000 \\" >> RELEASE_NOTES.md
+          echo "  -e PPS_BUCKET_COUNT=40 \\" >> RELEASE_NOTES.md
+          echo "  -e PPS_TIME1=0.123 \\" >> RELEASE_NOTES.md
+          echo "  -e GEO_BUCKET_SIZE=0.5 \\" >> RELEASE_NOTES.md
+          echo "  -e GEO_BUCKET_COUNT=40 \\" >> RELEASE_NOTES.md
+          echo "  -e EXPORTER_PORT=9015 \\" >> RELEASE_NOTES.md
+          echo "  -e VERBOSE=1 \\" >> RELEASE_NOTES.md
+          echo "  -e DEBUG=0 \\" >> RELEASE_NOTES.md
+          echo "  ghcr.io/brendanbank/gpsd-prometheus-exporter:latest" >> RELEASE_NOTES.md
           echo "\`\`\`" >> RELEASE_NOTES.md
           
           # Read the generated notes
@@ -104,7 +119,7 @@ jobs:
           prerelease: false
 
       - name: Upload release notes artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-notes-${{ steps.tag.outputs.tag }}
           path: RELEASE_NOTES.md
