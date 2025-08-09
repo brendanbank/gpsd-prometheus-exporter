@@ -26,12 +26,15 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Speed up apt by removing man-db to avoid slow trigger processing
+          sudo apt-get remove -y --purge man-db || true
+          sudo rm -f /var/lib/man-db/auto-update || true
           python -m pip install --upgrade pip
           pip install prometheus-client
           pip install gps
           # Install gpsd python library (may need system packages)
           sudo apt-get update
-          sudo apt-get install -y python3-gps
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-gps
 
       - name: Run basic syntax check
         run: |
@@ -75,7 +78,7 @@ jobs:
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-
+            type=sha,prefix=sha-
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
