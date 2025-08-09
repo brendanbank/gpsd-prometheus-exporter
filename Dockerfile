@@ -2,9 +2,9 @@ FROM python:3.12-slim
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONPATH=/app
 
-LABEL org.opencontainers.image.source=https://github.com/brendanbank/gpsd-prometheus-exporter
-LABEL org.opencontainers.image.description="Prometheus exporter for the gpsd GPS daemon. Collects metrics from the gpsd server and exposes them for scraping."
-LABEL org.opencontainers.image.licenses=BSD-3-Clause
+LABEL org.opencontainers.image.source https://github.com/brendanbank/gpsd-prometheus-exporter
+LABEL org.opencontainers.image.description "Prometheus exporter for the gpsd GPS daemon. Collects metrics from the gpsd server and exposes them for scraping."
+LABEL org.opencontainers.image.licenses BSD-3-Clause
 
 # Python deps from PyPI
 RUN pip install --no-cache-dir prometheus-client
