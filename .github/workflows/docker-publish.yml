@@ -38,18 +38,18 @@ jobs:
           python -m py_compile gpsd_exporter.py
           echo "Syntax check passed"
 
-      - name: Run entrypoint script test
+      - name: CLI help smoke test (no gpsd connection)
         run: |
-          chmod +x entrypoint.sh
-          # Test that entrypoint script doesn't crash
-          ./entrypoint.sh --help || echo "Entrypoint script test completed"
+          python3 gpsd_exporter.py --help
 
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
       packages: write
+      attestations: write
 
     steps:
       - name: Checkout repository
@@ -78,6 +78,7 @@ jobs:
             type=sha,prefix=sha-
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -87,6 +88,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Generate build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
 
 
   security-scan:
