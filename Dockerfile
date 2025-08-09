@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 # Use distro Python and libraries so python3-gps matches the interpreter
 RUN apt-get update && apt-get install -y --no-install-recommends \
