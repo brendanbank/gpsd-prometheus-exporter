@@ -89,3 +89,41 @@ jobs:
           cache-to: type=gha,mode=max
 
 
+  security-scan:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image for scanning (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: gpsd-prometheus-exporter:scan
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: gpsd-prometheus-exporter:scan
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
