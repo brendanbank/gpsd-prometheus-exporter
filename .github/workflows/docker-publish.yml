@@ -120,26 +120,26 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-  cleanup:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Delete untagged versions (keep last 10)
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: gpsd-prometheus-exporter
-          package-type: container
-          min-versions-to-keep: 10
-          delete-only-untagged-versions: true
+  # cleanup:
+  #   runs-on: ubuntu-latest
+  #   needs: build-and-push
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #   steps:
+  #     - name: Delete untagged versions (keep last 10)
+  #       uses: actions/delete-package-versions@v5
+  #       with:
+  #         package-name: gpsd-prometheus-exporter
+  #         package-type: container
+  #         min-versions-to-keep: 10
+  #         delete-only-untagged-versions: true
 
-      - name: Delete old SHA-tagged versions (keep last 20)
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: gpsd-prometheus-exporter
-          package-type: container
-          min-versions-to-keep: 20
-          ignore-versions: '^(latest|v[0-9]+(\.[0-9]+){0,2})$'
+  #     - name: Delete old SHA-tagged versions (keep last 20)
+  #       uses: actions/delete-package-versions@v5
+  #       with:
+  #         package-name: gpsd-prometheus-exporter
+  #         package-type: container
+  #         min-versions-to-keep: 20
+  #         ignore-versions: '^(latest|v[0-9]+(\.[0-9]+){0,2})$'
         
