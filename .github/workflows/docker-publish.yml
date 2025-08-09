@@ -78,7 +78,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: mode=max
+          provenance: true
           sbom: true
 
       - name: Generate build provenance
@@ -90,7 +90,7 @@ jobs:
 
 
   security-scan:
-    needs: test
+    needs: build-and-push
     runs-on: ubuntu-latest
     permissions:
       contents: read
