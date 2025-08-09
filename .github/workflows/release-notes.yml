@@ -38,7 +38,7 @@ jobs:
           if [ -z "$PREVIOUS_TAG" ]; then
             # First release, compare with initial commit
             COMMITS=$(git log --oneline --no-merges --reverse main --not $(git rev-list --max-parents=0 HEAD) | head -20)
-            echo "## What's New in $TAG" > RELEASE_NOTES.md
+            echo "### What's New in $TAG" > RELEASE_NOTES.md
             echo "" >> RELEASE_NOTES.md
             echo "### Initial Release" >> RELEASE_NOTES.md
             echo "" >> RELEASE_NOTES.md
@@ -90,7 +90,7 @@ jobs:
           echo "  -e GPSD_PORT=2947 \\" >> RELEASE_NOTES.md
           echo "  -e GEOPOINT_LON=38.897809878 \\" >> RELEASE_NOTES.md
           echo "  -e GEOPOINT_LAT=-77.036551259 \\" >> RELEASE_NOTES.md
-          echo "  -e PPS_BUCKET_SIZE=50000 \\" >> RELEASE_NOTES.md
+          echo "  -e PPS_BUCKET_SIZE=250 \\" >> RELEASE_NOTES.md
           echo "  -e PPS_BUCKET_COUNT=40 \\" >> RELEASE_NOTES.md
           echo "  -e PPS_TIME1=0.123 \\" >> RELEASE_NOTES.md
           echo "  -e GEO_BUCKET_SIZE=0.5 \\" >> RELEASE_NOTES.md

@@ -1,15 +1,18 @@
-FROM debian:bookworm-slim
+FROM python:3.12-slim
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONPATH=/app
 
-# Use distro Python and libraries so python3-gps matches the interpreter
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-gps \
-    python3-prometheus-client \
- && rm -rf /var/lib/apt/lists/*
+# Python deps from PyPI
+RUN pip install --no-cache-dir prometheus-client
 
 WORKDIR /app
 
-COPY . /app
+# Copy only required runtime files
+COPY entrypoint.sh /app/
+COPY gpsd_exporter.py /app/
+COPY gps /app/gps
+
+RUN chmod +x /app/entrypoint.sh
 
 ENV GEOPOINT_LON=38.897809878104574
 ENV GEOPOINT_LAT=-77.03655125936501
