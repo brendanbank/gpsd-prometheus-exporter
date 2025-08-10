@@ -14,7 +14,7 @@ now live in a different module.
 """
 
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
@@ -66,50 +66,50 @@ def isfinite(f):
 
 
 # Not required but a good idea if these match the list in include/gps.h
-ONLINE_SET = (1 << 1)
-TIME_SET = (1 << 2)
-TIMERR_SET = (1 << 3)
-LATLON_SET = (1 << 4)
-ALTITUDE_SET = (1 << 5)
-SPEED_SET = (1 << 6)
-TRACK_SET = (1 << 7)
-CLIMB_SET = (1 << 8)
-STATUS_SET = (1 << 9)
-MODE_SET = (1 << 10)
-DOP_SET = (1 << 11)
-HERR_SET = (1 << 12)
-VERR_SET = (1 << 13)
-ATTITUDE_SET = (1 << 14)
-SATELLITE_SET = (1 << 15)
-SPEEDERR_SET = (1 << 16)
-TRACKERR_SET = (1 << 17)
-CLIMBERR_SET = (1 << 18)
-DEVICE_SET = (1 << 19)
-DEVICELIST_SET = (1 << 20)
-DEVICEID_SET = (1 << 21)
-RTCM2_SET = (1 << 22)
-RTCM3_SET = (1 << 23)
-AIS_SET = (1 << 24)
-PACKET_SET = (1 << 25)
-SUBFRAME_SET = (1 << 26)
-GST_SET = (1 << 27)
-VERSION_SET = (1 << 28)
-POLICY_SET = (1 << 29)
-LOGMESSAGE_SET = (1 << 30)
-ERROR_SET = (1 << 31)
-TOFF_SET = (1 << 32)
-PPS_SET = (1 << 33)
-NAVDATA_SET = (1 << 34)
-OSCILLATOR_SET = (1 << 35)
-ECEF_SET = (1 << 36)
-VECEF_SET = (1 << 37)
-MAGNETIC_TRACK_SET = (1 << 38)
-RAW_SET = (1 << 39)
-NED_SET = (1 << 40)
-VNED_SET = (1 << 41)
-LOG_SET = (1 << 42)
-IMU_SET = (1 << 43)
-EOF_SET = (1 << 44)
+ONLINE_SET = 1 << 1
+TIME_SET = 1 << 2
+TIMERR_SET = 1 << 3
+LATLON_SET = 1 << 4
+ALTITUDE_SET = 1 << 5
+SPEED_SET = 1 << 6
+TRACK_SET = 1 << 7
+CLIMB_SET = 1 << 8
+STATUS_SET = 1 << 9
+MODE_SET = 1 << 10
+DOP_SET = 1 << 11
+HERR_SET = 1 << 12
+VERR_SET = 1 << 13
+ATTITUDE_SET = 1 << 14
+SATELLITE_SET = 1 << 15
+SPEEDERR_SET = 1 << 16
+TRACKERR_SET = 1 << 17
+CLIMBERR_SET = 1 << 18
+DEVICE_SET = 1 << 19
+DEVICELIST_SET = 1 << 20
+DEVICEID_SET = 1 << 21
+RTCM2_SET = 1 << 22
+RTCM3_SET = 1 << 23
+AIS_SET = 1 << 24
+PACKET_SET = 1 << 25
+SUBFRAME_SET = 1 << 26
+GST_SET = 1 << 27
+VERSION_SET = 1 << 28
+POLICY_SET = 1 << 29
+LOGMESSAGE_SET = 1 << 30
+ERROR_SET = 1 << 31
+TOFF_SET = 1 << 32
+PPS_SET = 1 << 33
+NAVDATA_SET = 1 << 34
+OSCILLATOR_SET = 1 << 35
+ECEF_SET = 1 << 36
+VECEF_SET = 1 << 37
+MAGNETIC_TRACK_SET = 1 << 38
+RAW_SET = 1 << 39
+NED_SET = 1 << 40
+VNED_SET = 1 << 41
+LOG_SET = 1 << 42
+IMU_SET = 1 << 43
+EOF_SET = 1 << 44
 SET_HIGH_BIT = 44
 UNION_SET = (RTCM2_SET | RTCM3_SET | SUBFRAME_SET | AIS_SET | VERSION_SET |
              DEVICELIST_SET | ERROR_SET | GST_SET)
@@ -384,10 +384,11 @@ class gps_io(object):
             if self.gpsd_host is not None:
                 # gpsd input
                 start = monotonic()
-                while (monotonic() - start) < input_wait:
+                remaining_time = input_wait
+                while remaining_time > 0:
                     # First priority is to be sure the input buffer is read.
                     # This is to prevent input buffer overuns
-                    if 0 < self.ser.waiting():
+                    if 0 < self.ser.waiting(remaining_time):
                         # We have serial input waiting, get it
                         # No timeout possible
                         # RTCM3 JSON can be over 4.4k long, so go big
@@ -397,17 +398,23 @@ class gps_io(object):
                             raw_fd.write(polybytes(new_out))
                         self.out += new_out
 
-                    consumed = decode_func(self.out)
-                    # TODO: the decoder shall return a some current
-                    # statement_identifier # to fill last_statement_identifier
-                    last_statement_identifier = None
-                    #
-                    self.out = self.out[consumed:]
-                    if ((expect_statement_identifier and
-                         (expect_statement_identifier ==
-                          last_statement_identifier))):
-                        # Got what we were waiting for.  Done?
-                        ret_code = 0
+                    while True:
+                        consumed = decode_func(self.out)
+                        if consumed == 0:
+                            break
+                        # TODO: the decoder shall return a some current
+                        # statement_identifier # to fill last_statement
+                        #_identifier
+                        last_statement_identifier = None
+                        #
+                        self.out = self.out[consumed:]
+                        if ((expect_statement_identifier and
+                             (expect_statement_identifier ==
+                              last_statement_identifier))):
+                            # Got what we were waiting for.  Done?
+                            ret_code = 0
+
+                    remaining_time = start + input_wait - monotonic()
 
             elif self.input_is_device:
                 # input is a serial device
@@ -440,16 +447,60 @@ class gps_io(object):
                         # Got what we were waiting for.  Done?
                         ret_code = 0
             else:
-                # ordinary file, so all read at once
-                self.out += self.ser.read()
-                if raw_fd is not None:
-                    # save to raw file
-                    raw_fd.write(polybytes(self.out))
+                # read from file
+                # hold no more than 16 kB in memory
+                # avoid allocating the bytes each time
+                # (though probably little benefit)
+                # this must be longer than the longest possible message!!!
+                max_in_mem = 16384
+
+                rb = bytearray(max_in_mem)
+                rb_view = memoryview(rb)
+                rb_idx = 0     # number of bytes read into buffer
+
+                # use self.out to cache between read calls
+                nleftover = len(self.out)
+                if nleftover:
+                    if nleftover > max_in_mem:
+                        raise IndexError('Unexpectedly long leftover bytes?')
+                    rb[:nleftover] = self.out
+                    rb_idx = nleftover
+
                 while True:
-                    consumed = decode_func(self.out)
-                    self.out = self.out[consumed:]
-                    if 0 >= consumed:
+
+                    # read into the end of our bytearray
+                    nread = self.ser.readinto(rb_view[rb_idx:])
+
+                    # if we read something, write it out if needed
+                    if 0 < nread:
+                        if raw_fd is not None:
+                            # save newly read part only
+                            raw_fd.write(polybytes(
+                                rb_view[rb_idx:rb_idx+nread:]))
+
+                    rb_idx += nread
+
+                    consumed_idx = 0
+                    while True:
+                        consumed = decode_func(rb_view[consumed_idx:rb_idx])
+                        if 0 >= consumed:
+                            break
+                        consumed_idx += consumed
+
+                    # copy end to front
+                    if consumed_idx < rb_idx:
+                        rb_view[:rb_idx-consumed_idx] = \
+                            rb_view[consumed_idx:rb_idx]
+                    rb_idx -= consumed_idx
+
+                    # if we made no progress, break
+                    # either we're done or had a decoding error
+                    if ((0 == nread and
+                         0 == consumed_idx)):
                         break
+
+                # store anything leftover to self.out
+                self.out = rb[:rb_idx]
 
         except IOError:
             # This happens on a good device name, but gpsd already running.
@@ -576,7 +627,7 @@ Or maybe a gpsd JSON file.
 """
 
     # module version, would be nice to automate the version
-    __version__ = "3.25"
+    __version__ = "3.26.1"
 
     def __init__(self,
                  device=None,
@@ -802,5 +853,4 @@ if __name__ == '__main__':
         # Avoid garble on ^C
         print("")
 
-# gps.py ends here
 # vim: set expandtab shiftwidth=4

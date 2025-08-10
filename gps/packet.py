@@ -8,22 +8,32 @@
 # Preserve this property!
 #
 # -*- coding: utf-8 -*-
-"""Python binding of the libgpsd module for recognizing GPS packets.
+"""Recognize GPS packets using the lexer from libgpsd and ctypes.
+
+Directly calling the  Device() class with a file handle,  returns a
+new instance with three methods:
+    get() returns a tuple consisting of the integer packet type and
+string packet value.  At the end of the stream it returns (-1, "").
+    reset() resets the packet-lexer to its initial state.
+    register_report() accepts a callback for debug message reporting.
+The callback will get two arguments: the error level of the message;
+and the message itself.
+
+Deprecated APIs:
 
 The new() function returns a new packet-lexer instance.  Lexer instances
 have two methods:
-    get() takes a file descriptor argument and returns a tuple consisting of
-the integer packet type and string packet value.  On end of file it returns
-(-1, '').
+    get() takes a file handle argument and returns a tuple consisting of
+the integer packet type and string packet value.  At the end of the stream
+it returns (-1, "").
     reset() resets the packet-lexer to its initial state.
     The module also has a register_report() function that accepts a callback
-for debug message reporting.  The callback will get two arguments, the error
-level of the message and the message itself.
+for debug message reporting.  The callback will get two arguments: the error
+level of the message; and the message itself.
 """
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 import ctypes
 import ctypes.util
-import os
 import os.path
 import sys
 
@@ -50,12 +60,15 @@ ONCORE_PACKET = 13
 GEOSTAR_PACKET = 14
 NMEA2000_PACKET = 15
 GREIS_PACKET = 16
-MAX_GPSPACKET_TYPE = 16
-RTCM2_PACKET = 17
-RTCM3_PACKET = 18
-JSON_PACKET = 19
-PACKET_TYPES = 20
-SKY_PACKET = 21
+SKY_PACKET = 17
+ALLYSTAR_PACKET = 18
+CASIC_PACKET = 19
+IS_PACKET = 20
+MAX_GPSPACKET_TYPE = 20
+RTCM2_PACKET = 21
+RTCM3_PACKET = 22
+JSON_PACKET = 23
+PACKET_TYPES = 24
 LOG_SHOUT = 0
 LOG_WARN = 1
 LOG_CLIENT = 2
@@ -72,39 +85,39 @@ ISGPS_ERRLEVEL_BASE = LOG_RAW
 
 class PacketLibraryNotFoundError(Exception):
     """Error loading packet library."""
+
     pass
 
 
 def importado():
     """
-Load the packet library or throw a PacketLibraryNotFoundError trying.
-See below for search order.
-find_library() looks in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH,
-$home/lib, /.usr/local/lib, /usr/lib, /lib
-Returns the library handle."""
+    Load the packet library or throw a PacketLibraryNotFoundError trying.
 
-    packet_name = 'libgpsdpacket.30.0.0.dylib'
-    packet_dirs = []         # places to look
-    lib_dir = '/tmp/gps/lib'
+    See below for the search list.
+    find_library() can look in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, /lib,
+    /usr/lib, /usr/local/lib, and $home/lib returning the library handle.
+    """
+    # Form full paths to candidates
+    packet_paths = [
+        os.path.join(os.path.abspath(x), "libgpsdpacket.31.0.0.dylib")
+        for x in [
+            # First, look in the directory containing this package "gps",
+            # possibly following a symlink in the process. Scons places
+            # the file there in the build tree.  We expect it to fail
+            # when running the installed version rather than say
+            # `scons check`.
+            os.path.dirname(os.path.realpath(gps.__path__[0])),
 
-    # First look in the directory containing this 'gps' package, possibly
-    # following a symlink in the process.
-    # This is the normal location within the build tree.  It is expected
-    # to fail when running the installed version.
-    packet_dirs.append(os.path.dirname(os.path.realpath(gps.__path__[0])))
+            # Next, look in the library install directory. This is the
+            # expected location when running the installed version.
+            os.path.realpath("/tmp/gpsd-install/lib"),
+        ]
+    ]
 
-    # Next look in the library install directory.
-    # This is the expected location when running the installed version.
-    packet_dirs.append(os.path.realpath(lib_dir))
+    # Finally, try find_library().
 
-    # Form full paths to candidates so far
-    packet_paths = [os.path.join(os.path.abspath(x), packet_name)
-                    for x in packet_dirs]
-
-    # Finally try find_library().
-
-    # find_library() looks for bare library name, using dlopen()
-    # May, or may not, return a full path.  Either way use as is.
+    # find_library() looks for a bare library name, using dlopen()
+    # May, or may not, return a full path.  Either way, use it as is.
     #
     # linux dlopen() looks in:
     #  LD_LIBRARY_PATH,
@@ -124,9 +137,9 @@ Returns the library handle."""
     #   LoadLibrary() can use a full path, or whatever find_library() returned.
     #
     # macOS:
-    #   find_library() returns a full path unless lib in current directory
-    #   find_library() returns no full path if lib in current directory
-    #   But LoadLibrary() always needs a full path
+    #   find_library() returns a full path, unless lib is in the current
+    #   directory, then it returns a partial path. But LoadLibrary() always
+    #   needs a full path
     #
     packet_path = ctypes.util.find_library('gpsdpacket')
     if packet_path:
@@ -135,15 +148,18 @@ Returns the library handle."""
     for packet_path in packet_paths:
         try:
             if sys.flags.verbose:
-                print('try_packet_lib: %s' % packet_path, file=sys.stderr)
+                sys.stderr.write('INFO: try_packet_lib: %s\n' % packet_path)
             lib = ctypes.cdll.LoadLibrary(packet_path)
-            # get the library version from the library
-            gpsd_version = ctypes.c_char_p.in_dll(lib, "gpsd_version").value
-            gpsd_version = gps.polystr(gpsd_version)
-            if '3.25' != gpsd_version:
-                sys.stderr.write("WARNING: got library version %s, "
-                                 "expected %s\n" %
-                                 (gpsd_version, '3.25'))
+            # Get the library version from the library.
+            wrap_version = "3.26.1"
+            flib_version = ctypes.c_char_p.in_dll(lib, "gpsd_version")
+            flib_version = gps.polystr(flib_version.value)
+            if wrap_version != flib_version:
+                sys.stderr.write(
+                    "ERROR: got library version %s, expected %s from %s\n"
+                    % (flib_version, wrap_version, packet_path)
+                )
+                sys.exit(1)
             return lib
         except OSError:
             pass
@@ -151,28 +167,31 @@ Returns the library handle."""
     raise PacketLibraryNotFoundError("Can't find packet library")
 
 
-_loaded = None
+_lexer_global = None
 _packet = importado()
 
-_lexer_size = ctypes.c_size_t.in_dll(_packet, "fvi_size_lexer")
-LEXER_SIZE = _lexer_size.value
 _buffer_size = ctypes.c_size_t.in_dll(_packet, "fvi_size_buffer").value
 
 REPORTER = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_char_p)
 
 
 class GpsdErrOutT(ctypes.Structure):
-    '''Used in gps.packet:register_report() to set logging callback.'''
     # pylint: disable-msg=R0903
+    """Hold data used to set the logging callback, etc."""
+
     _fields_ = [('debug', ctypes.c_int),
                 ('report', REPORTER),
                 ('label', ctypes.c_char_p)]
 
 
 class lexer_t(ctypes.Structure):
-    '''Used in gps.packet:lexer.get() to pass in data and pull
-    out length, packet type, packet, and another datum.'''
     # pylint: disable-msg=R0903
+    """Hold data and help transfer data to/from a Lexer instance.
+
+    Held data notably includes packet type,
+    length, the out buffer, and the counter.
+    """
+
     _fields_ = [
         ('packet_type', ctypes.c_int),
         ('state', ctypes.c_uint),
@@ -189,52 +208,141 @@ class lexer_t(ctypes.Structure):
     ]
 
 
+C_DEVICE_P = ctypes.c_void_p
+C_LEXER_P = ctypes.POINTER(lexer_t)
+_packet.packet_reset.argtypes = [C_LEXER_P]
+
+
 def new():
-    """new() -> new packet-self object"""
-    return Lexer()
+    """Create new Lexer instance."""
+    global _lexer_global
+    ret = Lexer()
+    if not _lexer_global:  # Always happens on pass 1
+        _lexer_global = ret
+    return ret
 
 
 def register_report(reporter):
-    """register_report(callback)
+    """Set logging callback for the Lexer instance.
 
-    callback must be a callable object expecting a string as parameter."""
-    global _loaded
-    if callable(reporter):
-        _loaded.errout.report = REPORTER(reporter)
+    The callback must be a callable object expecting
+    an int log level and a str message.
+    """
+    global _lexer_global
+    if not _lexer_global:  # Always happens before pass 1
+        raise NameError('new() not called.')
+    _lexer_global.register_report(reporter)
 
 
 class Lexer():
-    """GPS packet lexer object
+    """Fetch sentences from a file handle.
 
-Fetch a single packet from file descriptor
-"""
+    (May potentially change devices mid-stream.)
+    Fetch a single packet from a file handle.
+    """
+
     pointer = None
 
     def __init__(self):
-        global _loaded
-        _packet.ffi_Lexer_init.restype = ctypes.POINTER(lexer_t)
+        """Allocate and configure a Device instance."""
+        _packet.ffi_Lexer_init.restype = C_LEXER_P
+        _packet.packet_get.restype = ctypes.c_int
+        _packet.packet_get.argtypes = [ctypes.c_int, C_LEXER_P]
         self.pointer = _packet.ffi_Lexer_init()
-        _loaded = self.pointer.contents
+        if not self.pointer:
+            raise ValueError
+
+    def __del__(self):
+        """Link into the tear down."""
+        _packet.ffi_Lexer_fini.restype = None
+        _packet.ffi_Lexer_fini.argtypes = [C_LEXER_P]
+        _packet.ffi_Lexer_fini(self.pointer)
 
     def get(self, file_handle):
-        """Get a packet from a file descriptor."""
-        global _loaded
-        _packet.packet_get.restype = ctypes.c_int
-        _packet.packet_get.argtypes = [ctypes.c_int, ctypes.POINTER(lexer_t)]
+        """Get a packet from the device.
+
+        Returns a tuple of the packets length,
+        type, contents and position in stream.
+
+        Deprecated in 2023; use packet_get1() instead.
+        """
         length = _packet.packet_get(file_handle, self.pointer)
-        _loaded = self.pointer.contents
-        packet = ''
-        for octet in range(_loaded.outbuflen):
-            packet += chr(_loaded.outbuffer[octet])
-        return [length,
-                _loaded.packet_type,
-                gps.misc.polybytes(packet),
-                _loaded.char_counter]
+        lexer = self.pointer.contents
+        packet = bytearray(lexer.outbuffer[:lexer.outbuflen])
+        return (length,
+                lexer.packet_type,
+                bytes(packet),
+                lexer.char_counter)
+
+    def register_report(self, reporter):
+        """Set logging callback for Device instance.
+
+        The callback must be a callable object expecting
+        an int log level and a str message.
+        """
+        if callable(reporter):
+            lexer__instance = self.pointer.contents
+            lexer__instance.errout.report = REPORTER(reporter)
 
     def reset(self):
-        """Reset the packet self to ground state."""
-        _packet.ffi_Lexer_init.restype = None
-        _packet.ffi_Lexer_init.argtypes = [ctypes.POINTER(lexer_t)]
-        _packet.ffi_Lexer_init(self.pointer)
+        """Reset the lexer to ground state."""
+        _packet.packet_reset(self.pointer)
+
+
+class Device():
+    """Fetch sentences from a file handle."""
+
+    pointer = None
+    lexer_pointer = None
+
+    def __init__(self, file_handle):
+        """Allocate and configure a Device instance."""
+        _packet.ffi_Device_init.restype = C_DEVICE_P
+        _packet.ffi_Device_init.argtypes = [ctypes.c_int]
+        _packet.ffi_Device_fini.restype = None
+        _packet.ffi_Device_fini.argtypes = [C_DEVICE_P]
+        _packet.ffi_Device_Lexer.restype = C_LEXER_P
+        _packet.ffi_Device_Lexer.argtypes = [C_DEVICE_P]
+        _packet.packet_get1.restype = ctypes.c_int
+        _packet.packet_get1.argtypes = [C_DEVICE_P]
+
+        self.pointer = _packet.ffi_Device_init(file_handle)
+        if not self.pointer:
+            raise ValueError
+        self.lexer_pointer = _packet.ffi_Device_Lexer(self.pointer)
+        if not self.lexer_pointer:
+            raise ValueError
+
+    def __del__(self):
+        """Link into the tear down."""
+        _packet.ffi_Device_fini(self.pointer)
+
+    def get(self):
+        """Get a packet from the device.
+
+        Returns a tuple of the packets length,
+        type, contents and position in stream.
+        """
+        length = _packet.packet_get1(self.pointer)
+        lexer_instance = self.lexer_pointer.contents
+        packet = bytearray(lexer_instance.outbuffer[:lexer_instance.outbuflen])
+        return (length,
+                lexer_instance.packet_type,
+                bytes(packet),
+                lexer_instance.char_counter)
+
+    def register_report(self, reporter):
+        """Set logging callback for Device instance.
+
+        The callback must be a callable object expecting
+        an int log level and a str message.
+        """
+        if callable(reporter):
+            lexer_instance = self.lexer_pointer.contents
+            lexer_instance.errout.report = REPORTER(reporter)
+
+    def reset(self):
+        """Reset the lexer to ground state."""
+        _packet.packet_reset(self.lexer_pointer)
 
 # vim: set expandtab shiftwidth=4
