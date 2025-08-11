@@ -21,7 +21,7 @@ build-gpsd: ## Clone gpsd repo, build and install Python library only
 	@echo "Cloning gpsd repository..."
 	rm -rf $(GPSD_TEMP_DIR)
 	git clone $(GPSD_REPO) $(GPSD_TEMP_DIR)
-	cd $(GPSD_TEMP_DIR) && git checkout release-$(GPSD_VERSION)
+	cd $(GPSD_TEMP_DIR) && git checkout -q release-$(GPSD_VERSION)
 	@echo "Building and installing Python library only..."
 	cd $(GPSD_TEMP_DIR) && scons install python=yes gpsd=no gpsdclients=no xgps=no libgpsmm=no qt=no shared=yes prefix=$(GPSD_INSTALL_DIR) python_libdir=$(GPSD_INSTALL_DIR)/lib
 	@echo "Build and install completed successfully!"
