@@ -428,18 +428,32 @@ gpsd_long 4.6157675
 
 ### Local Build
 
-Build the Docker image locally with enhanced features:
+Build the Docker image locally with enhanced features.
+
+**Prerequisites:** The gps Python module must be built before building the Docker image. This avoids rebuilding it for every platform during multi-platform builds.
+
+#### Quick Build (recommended)
+
+Use the helper script that builds the gps module and Docker image:
 
 ```bash
-# Build without cache (recommended for first build or after Dockerfile changes)
-docker compose -f docker-compose.build.yml build --no-cache
-
-# Build and start
-docker compose -f docker-compose.build.yml up --build
-
-# Or build without cache and start
-docker compose -f docker-compose.build.yml up --build --no-cache
+./build-docker.sh
 ```
+
+#### Manual Build
+
+```bash
+# Step 1: Build the gps Python module from source
+make all
+
+# Step 2: Build Docker image
+docker build -t gpsd-prometheus-exporter:local .
+
+# Or use docker-compose
+docker compose -f docker-compose.build.yml up --build
+```
+
+**Note:** The `gps/` directory is in `.gitignore` and must not be committed to the repository due to licensing requirements.
 
 **Note for macOS users:** The `docker-compose.build.yml` file is configured for bridge networking (works on macOS/Windows). If you're on Linux and want host networking, uncomment `network_mode: host` in the compose file and remove the `ports:` section.
 

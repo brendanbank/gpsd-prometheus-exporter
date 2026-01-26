@@ -12,7 +12,50 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # Build gps module once and share across all jobs
+  build-gps-module:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build gps Python module from source
+        run: |
+          # Install build dependencies
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git scons build-essential python3-dev
+
+          # Build gps module
+          GPSD_VERSION=3.26.1
+          GPSD_REPO=https://gitlab.com/gpsd/gpsd.git
+          GPSD_TEMP_DIR=/tmp/gpsd
+          GPSD_INSTALL_DIR=/tmp/gpsd-install
+
+          echo "Cloning gpsd repository..."
+          git clone ${GPSD_REPO} ${GPSD_TEMP_DIR}
+          cd ${GPSD_TEMP_DIR}
+          git checkout -q release-${GPSD_VERSION}
+
+          echo "Building gps Python module..."
+          scons install python=yes gpsd=no gpsdclients=no xgps=no libgpsmm=no qt=no shared=yes \
+            prefix=${GPSD_INSTALL_DIR} python_libdir=${GPSD_INSTALL_DIR}/lib
+
+          echo "Copying to artifact directory..."
+          mkdir -p ${GITHUB_WORKSPACE}/gps-artifact
+          cp -r ${GPSD_INSTALL_DIR}/lib/gps/* ${GITHUB_WORKSPACE}/gps-artifact/
+
+          echo "Build completed successfully!"
+
+      - name: Upload gps module as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gps-module
+          path: gps-artifact/
+          retention-days: 1
+
   test:
+    needs: build-gps-module
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -31,33 +74,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install prometheus-client
 
-      - name: Build gps Python module from source
-        run: |
-          # Install build dependencies
-          sudo apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            git scons build-essential python3-dev
-
-          # Build gps module (same as Dockerfile)
-          GPSD_VERSION=3.26.1
-          GPSD_REPO=https://gitlab.com/gpsd/gpsd.git
-          GPSD_TEMP_DIR=/tmp/gpsd
-          GPSD_INSTALL_DIR=/tmp/gpsd-install
-
-          git clone ${GPSD_REPO} ${GPSD_TEMP_DIR}
-          cd ${GPSD_TEMP_DIR}
-          git checkout -q release-${GPSD_VERSION}
-
-          # Build only Python library
-          scons install python=yes gpsd=no gpsdclients=no xgps=no libgpsmm=no qt=no shared=yes \
-            prefix=${GPSD_INSTALL_DIR} python_libdir=${GPSD_INSTALL_DIR}/lib
-
-          # Copy to workspace for testing
-          mkdir -p ${GITHUB_WORKSPACE}/gps
-          cp -r ${GPSD_INSTALL_DIR}/lib/gps/* ${GITHUB_WORKSPACE}/gps/
-
-          # Clean up
-          rm -rf ${GPSD_TEMP_DIR} ${GPSD_INSTALL_DIR}
+      - name: Download gps module artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gps-module
+          path: gps
 
       - name: Run basic syntax check
         run: |
@@ -72,7 +93,7 @@ jobs:
           python3 gpsd_exporter.py --help
   
   build-and-push:
-    needs: test
+    needs: [build-gps-module, test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -83,6 +104,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download gps module artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gps-module
+          path: gps
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
