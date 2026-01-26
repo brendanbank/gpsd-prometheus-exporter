@@ -21,5 +21,11 @@ services:
       - EXPORTER_PORT=${EXPORTER_PORT:-9015}
       - DEBUG=${DEBUG:-0}
       - VERBOSE=${VERBOSE:-1}
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    network_mode: host
+    # Note: network_mode: host doesn't work on macOS/Docker Desktop
+    # Use bridge networking for macOS, or set network_mode: host for Linux only

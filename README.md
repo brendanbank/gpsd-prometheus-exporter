@@ -80,11 +80,29 @@ The easiest way to run the exporter is using Docker.
 
 #### Quick Start
 
+**Linux (with host networking):**
 ```bash
 docker run -d --name gpsd-exporter \
     --network=host \
-    -p 9015:9015 \
     -e GPSD_HOST=localhost \
+    -e GPSD_PORT=2947 \
+    -e GEOPOINT_LON=38.897809878 \
+    -e GEOPOINT_LAT=-77.036551259 \
+    -e PPS_BUCKET_SIZE=250 \
+    -e PPS_BUCKET_COUNT=40 \
+    -e GEO_BUCKET_SIZE=0.5 \
+    -e GEO_BUCKET_COUNT=40 \
+    -e EXPORTER_PORT=9015 \
+    -e VERBOSE=1 \
+    -e DEBUG=0 \
+    ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+```
+
+**macOS/Windows (bridge networking):**
+```bash
+docker run -d --name gpsd-exporter \
+    -p 9015:9015 \
+    -e GPSD_HOST=host.docker.internal \
     -e GPSD_PORT=2947 \
     -e GEOPOINT_LON=38.897809878 \
     -e GEOPOINT_LAT=-77.036551259 \
@@ -137,8 +155,13 @@ services:
       - VERBOSE=${VERBOSE:-1}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: unless-stopped
-    network_mode: host
+    # Note: network_mode: host only works on Linux, not macOS/Windows
+    # For Linux, uncomment the line below and remove the ports: section
+    # network_mode: host
 ```
 
 **Local Build** (`docker-compose.build.yml`):
@@ -165,8 +188,13 @@ services:
       - EXPORTER_PORT=${EXPORTER_PORT:-9015}
       - DEBUG=${DEBUG:-0}
       - VERBOSE=${VERBOSE:-1}
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: unless-stopped
-    network_mode: host
+    # Note: network_mode: host only works on Linux, not macOS/Windows
+    # For Linux, uncomment the line below and remove the ports: section
+    # network_mode: host
 ```
 
 #### Host Network Configuration
@@ -199,7 +227,7 @@ docker run -d --name gpsd-exporter \
 curl 127.0.0.1:9015
 ```
 
-For Docker Compose on macOS, remove `network_mode: host`, keep `ports:` and `extra_hosts`, and set `GPSD_HOST=host.docker.internal`:
+For Docker Compose on macOS, remove `network_mode: host`, keep `ports:` and `extra_hosts`, add DNS configuration, and set `GPSD_HOST=host.docker.internal`:
 
 ```yaml
 services:
@@ -208,19 +236,39 @@ services:
       - "9015:9015"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     environment:
       - GPSD_HOST=host.docker.internal
       - GPSD_PORT=2947
 ```
 
-Remote gpsd (any OS): If your gpsd runs on a remote host (e.g., `ntp0.bgwlan.nl`), host networking is not required. Publish the port and point `GPSD_HOST` to the remote server:
+**Remote gpsd (any OS):** If your gpsd runs on a remote host (e.g., `ntp0.bgwlan.nl`), host networking is not required. Publish the port, configure DNS, and point `GPSD_HOST` to the remote server:
 
 ```bash
 docker run -d --name gpsd-exporter \
   -p 9015:9015 \
+  --dns 8.8.8.8 \
+  --dns 8.8.4.4 \
   -e GPSD_HOST=ntp0.bgwlan.nl \
   -e GPSD_PORT=2947 \
   ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+```
+
+Or with Docker Compose for remote gpsd:
+```yaml
+services:
+  gpsd-exporter:
+    image: ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+    ports:
+      - "9015:9015"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    environment:
+      - GPSD_HOST=ntp0.bgwlan.nl
+      - GPSD_PORT=2947
 ```
 
 #### Environment Variables
@@ -383,8 +431,17 @@ gpsd_long 4.6157675
 Build the Docker image locally with enhanced features:
 
 ```bash
+# Build without cache (recommended for first build or after Dockerfile changes)
+docker compose -f docker-compose.build.yml build --no-cache
+
+# Build and start
 docker compose -f docker-compose.build.yml up --build
+
+# Or build without cache and start
+docker compose -f docker-compose.build.yml up --build --no-cache
 ```
+
+**Note for macOS users:** The `docker-compose.build.yml` file is configured for bridge networking (works on macOS/Windows). If you're on Linux and want host networking, uncomment `network_mode: host` in the compose file and remove the `ports:` section.
 
 ### Prometheus Integration
 
