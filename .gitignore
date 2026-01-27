@@ -135,3 +135,6 @@ ntpd_monitor.log
 .DS_Store
 .vscode
 gps/*
+
+# Docker Compose override file (user-specific configuration)
+docker-compose.override.yml
