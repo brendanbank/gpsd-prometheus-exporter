@@ -10,7 +10,7 @@ A [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitl
 - [Features](#features)
   - [GPS Position and Quality Metrics](#gps-position-and-quality-metrics)
   - [Per Satellite Data](#per-satellite-data)
-  - [PPS Time Synchronization](#pps-time-synchronization)
+  - [PPS Clock Offset Monitoring](#pps-clock-offset-monitoring)
   - [Geographic Offset Tracking](#geographic-offset-tracking)
 - [Installation](#installation)
   - [Docker (Recommended)](#docker-recommended)
@@ -35,7 +35,7 @@ A [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitl
 The exporter provides real-time monitoring of:
 - GPS position accuracy and quality metrics
 - Individual satellite data and signal strength
-- PPS (Pulse Per Second) time synchronization accuracy
+- PPS (Pulse Per Second) clock offset monitoring
 - Geographic offset tracking from a reference point
 
 ## Features
@@ -52,19 +52,15 @@ Track individual satellite performance and signal quality:
 
 ![Per Satellite Data](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/sats.png?raw=true)
 
-### PPS Time Synchronization
+### PPS Clock Offset Monitoring
 
-Monitor clock offset from PPS (Pulse Per Second) signals for precise time synchronization:
+Monitor clock offset from PPS (Pulse Per Second) signals:
 
 ![PPS Time Offset](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/ce8d05be537ec7fe935bad0c9479cf3e0770b41a/img/clock_pps_offset.png?raw=true)
 
-To enable PPS monitoring, start gpsd with a PPS device:
+**Note:** This metric reports only the PPS offset as observed by gpsd. It does not measure or guarantee time synchronization accuracy. Actual time synchronization accuracy is managed by ntpd or other time synchronization daemons. The gpsd PPS implementation assumes the PPS signal is perfect, which may not reflect real-world conditions.
 
-```bash
-gpsd <options> [serial port path] /dev/pps[0-9]
-```
-
-Then add `--pps-histogram` to the exporter runtime arguments.
+To enable PPS monitoring in the exporter, add `--pps-histogram` to the runtime arguments.
 
 ### Geographic Offset Tracking
 
@@ -92,10 +88,12 @@ docker run -d --name gpsd-exporter \
     -e PPS_BUCKET_COUNT=40 \
     -e GEO_BUCKET_SIZE=0.5 \
     -e GEO_BUCKET_COUNT=40 \
-    -e EXPORTER_PORT=9015 \
     -e VERBOSE=1 \
     -e DEBUG=0 \
     ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+
+# Note: With host networking, EXPORTER_PORT is not needed
+# The exporter binds directly to port 9015 on the host
 ```
 
 **macOS/Windows (bridge networking):**
@@ -312,7 +310,7 @@ EOF
 
 ### Native Installation
 
-For systems where Docker is not available:
+For systems where Docker is not desired:
 
 #### Prerequisites
 
@@ -329,6 +327,10 @@ Ensure gpsd, Prometheus, and Grafana are properly running. The exporter requires
 apt update
 apt install python3-prometheus-client python3-gps
 
+# Note: System python3-gps package may be older than required version 3.18+
+# If you encounter version issues, build the gps module from source using the Makefile:
+# make all
+
 # Clone repository
 git clone https://github.com/brendanbank/gpsd-prometheus-exporter.git
 cd gpsd-prometheus-exporter
@@ -343,10 +345,6 @@ chmod +x /usr/local/bin/gpsd_exporter.py
 systemctl enable gpsd_exporter.service
 systemctl start gpsd_exporter.service
 ```
-
-#### U-Blox GPS Configuration
-
-Some U-Blox GPS units require forced 115200 baud. See [gps_setserial.service](https://github.com/brendanbank/gpsd-prometheus-exporter/blob/master/gps_setserial.service) for boot-time configuration.
 
 ## Configuration
 
