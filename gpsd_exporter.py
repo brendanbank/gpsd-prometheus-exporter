@@ -603,13 +603,26 @@ class SatCollector(object):
         for sat in last_measurement.keys():
             log.debug(f'sat:: {last_measurement[sat]}')
             try:
+                sat_dict = last_measurement[sat]
+
+                # Extract label values with defaults for missing optional fields
+                # PRN is required - will raise KeyError if missing
+                prn = str(sat_dict['PRN'])
+                # svid defaults to PRN for GPS-only receivers (semantically correct)
+                svid = str(sat_dict.get('svid', sat_dict['PRN']))
+                # gnssid defaults to 0 (GPS constellation per NMEA 0183) if missing
+                gnssid = str(sat_dict.get('gnssid', 0))
+                # used defaults to False if missing
+                used = str(sat_dict.get('used', False))
+
+                # Add all available metrics for this satellite
                 for key in metrics.keys():
-                    sat_dict = last_measurement[sat]
                     if key in sat_dict.keys():
-                        metrics[key].add_metric([str(sat_dict['PRN']), str(sat_dict['svid']), str(sat_dict['gnssid']), str(sat_dict['used'])], sat_dict[key])
+                        metrics[key].add_metric([prn, svid, gnssid, used], sat_dict[key])
+
             except KeyError as e:
-                # Handle missing satellite data fields
-                log.warning(f"Skipping satellite metrics due to missing field: {e}")
+                # Only PRN is truly required - skip satellite if missing
+                log.warning(f"Skipping satellite due to missing required field PRN: {e}")
                 continue
             except Exception as e:
                 # Handle other satellite metrics processing errors
