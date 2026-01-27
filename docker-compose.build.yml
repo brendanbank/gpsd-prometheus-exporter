@@ -6,8 +6,7 @@ services:
       dockerfile: Dockerfile
     image: gpsd-prometheus-exporter:stable
     container_name: gpsd-exporter
-    ports:
-      - "${EXPORTER_PORT:-9015}:9015"
+    network_mode: host
     environment:
       - GPSD_HOST=${GPSD_HOST:-localhost}
       - GPSD_PORT=${GPSD_PORT:-2947}
@@ -21,11 +20,6 @@ services:
       - EXPORTER_PORT=${EXPORTER_PORT:-9015}
       - DEBUG=${DEBUG:-0}
       - VERBOSE=${VERBOSE:-1}
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     restart: unless-stopped
-    # Note: network_mode: host doesn't work on macOS/Docker Desktop
-    # Use bridge networking for macOS, or set network_mode: host for Linux only
+    # Note: This uses host networking (default for Linux)
+    # macOS/Windows users: Copy docker-compose.override.yml.example to docker-compose.override.yml
