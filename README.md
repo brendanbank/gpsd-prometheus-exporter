@@ -88,10 +88,12 @@ docker run -d --name gpsd-exporter \
     -e PPS_BUCKET_COUNT=40 \
     -e GEO_BUCKET_SIZE=0.5 \
     -e GEO_BUCKET_COUNT=40 \
-    -e EXPORTER_PORT=9015 \
     -e VERBOSE=1 \
     -e DEBUG=0 \
     ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
+
+# Note: With host networking, EXPORTER_PORT is not needed
+# The exporter binds directly to port 9015 on the host
 ```
 
 **macOS/Windows (bridge networking):**
@@ -324,6 +326,10 @@ Ensure gpsd, Prometheus, and Grafana are properly running. The exporter requires
 # Install dependencies
 apt update
 apt install python3-prometheus-client python3-gps
+
+# Note: System python3-gps package may be older than required version 3.18+
+# If you encounter version issues, build the gps module from source using the Makefile:
+# make all
 
 # Clone repository
 git clone https://github.com/brendanbank/gpsd-prometheus-exporter.git
