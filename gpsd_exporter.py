@@ -49,9 +49,9 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_TIMEOUT = 10  # Default connection timeout in seconds
 DEFAULT_RETRY_DELAY = 10  # Default initial retry delay in seconds
 DEFAULT_MAX_RETRY_DELAY = 300  # Maximum retry delay in seconds (5 minutes)
-NSEC=1000000000
-USEC=1000000
-MSEC=1000
+NSEC = 1000000000
+USEC = 1000000
+MSEC = 1000
     
 class DependencyError(Exception):
     pass
@@ -201,10 +201,10 @@ Usage:
         verbose = args.verbose
         debug = args.debug
 
-        if (debug > 0):
-            logging.basicConfig(format='DEBUG %(funcName)s(%(lineno)s): %(message)s', 
+        if debug > 0:
+            logging.basicConfig(format='DEBUG %(funcName)s(%(lineno)s): %(message)s',
                                 stream=sys.stderr, level=logging.DEBUG)
-        elif (verbose):
+        elif verbose:
             logging.basicConfig(format=program_name + ': %(message)s', stream=sys.stderr, level=logging.INFO)
         else:
             logging.basicConfig(format=program_name + ': %(message)s', stream=sys.stderr, level=logging.WARN)
@@ -225,9 +225,9 @@ Usage:
                 retry_count = 0
                 current_delay = args.retry_delay
                 
-            except (KeyboardInterrupt):
-                print ("Applications closed!")
-                return(0)
+            except KeyboardInterrupt:
+                print("Applications closed!")
+                return 0
             except (StopIteration, ConnectionRefusedError, socket.timeout, ConnectionError, OSError) as e:
                 retry_count += 1
                 log.error(f'Connection to gpsd failed (attempt {retry_count}): {e}')
@@ -244,7 +244,7 @@ Usage:
             except Exception as e:
                 log.error(f'Unexpected error in main loop: {e}')
                 print(f'ERROR: Unexpected error: {e}')
-                return(1)
+                return 1
 
                 
         return 0
@@ -252,8 +252,8 @@ Usage:
         ### handle keyboard interrupt ###
         return 0
     except Exception as e:
-        if DEBUG or TESTRUN:
-            raise(e)
+        if DEBUG:
+            raise e
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
@@ -323,22 +323,18 @@ def init_metrics(args):
     metrics['DEVICES'] = Info('gpsd_devices', 'Device Details', ['device'], registry=registry)
     metrics['SAT_STATUS'] = {}
     
-    if (args.pps):
-        PPS_BUCKETS = []
-        PPS_BUCKETS.append(float("-inf"))
-        [ PPS_BUCKETS.append(i * args.pps_bucket_size) for i in range(int(args.pps_bucket_count / -2), int(args.pps_bucket_count / 2) + 1)]
+    if args.pps:
+        PPS_BUCKETS = [float("-inf")]
+        PPS_BUCKETS.extend(i * args.pps_bucket_size for i in range(int(args.pps_bucket_count / -2), int(args.pps_bucket_count / 2) + 1))
         PPS_BUCKETS.append(float("inf"))
         metrics['PPS_HIS'] = Histogram('gpsd_pps_histogram', 'PPS Histogram', ['device'], buckets=PPS_BUCKETS, registry=registry)
         
     if args.geo_offset:
-        GEO_BUCKETS_OFFSET = []
-        [ GEO_BUCKETS_OFFSET.append(i * args.geo_bucket_size) for i in range(1,args.geo_bucket_count)]
+        GEO_BUCKETS_OFFSET = list(i * args.geo_bucket_size for i in range(1, args.geo_bucket_count))
         GEO_BUCKETS_OFFSET.append(float("inf"))
 
-        GEO_BUCKETS_YX = []
-        GEO_BUCKETS_YX.append(float("-inf"))
-        [ GEO_BUCKETS_YX.append(i * args.geo_bucket_size) 
-                for i in range(int (args.geo_bucket_count / -2),int(args.geo_bucket_count / 2) + 1)]
+        GEO_BUCKETS_YX = [float("-inf")]
+        GEO_BUCKETS_YX.extend(i * args.geo_bucket_size for i in range(int(args.geo_bucket_count / -2), int(args.geo_bucket_count / 2) + 1))
         GEO_BUCKETS_YX.append(float("inf"))
         
         metrics['GEO_OFFSET'] = Histogram('gpsd_geo_offset_m_histogram', 'Geo offset Histogram (meters)', 
@@ -352,8 +348,8 @@ def init_metrics(args):
 
 
     metrics['registry'] = registry
-        
-    return(metrics)
+
+    return metrics
 
 
 def getPositionData(gpsd, metrics, args):
@@ -383,7 +379,8 @@ def getPositionData(gpsd, metrics, args):
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
     
-    if (args.debug > 1): log.debug(f'received {nx["class"]}: {nx}') 
+    if args.debug > 1:
+        log.debug(f'received {nx["class"]}: {nx}') 
     
     if nx['class'] == 'VERSION':
         
@@ -399,10 +396,10 @@ def getPositionData(gpsd, metrics, args):
             corr = args.pps_time1 * NSEC
             value = nx['clock_nsec'] - corr
             
-            if (value > (NSEC/2)):
+            if value > (NSEC / 2):
                 value = value - NSEC 
                 
-            log.debug (f"PPS offset {nx['clock_nsec']} -> {value}")
+            log.debug(f"PPS offset {nx['clock_nsec']} -> {value}")
             log.debug(nx)
             
             metrics['PPS_HIS'].labels(nx['device']).observe(value)
@@ -431,8 +428,8 @@ def getPositionData(gpsd, metrics, args):
         """process the list of satellites """
         satellites = nx.get('satellites')
         if satellites is None:
-            log.debug (f'no satellites in SKY')
-            log.debug (nx)
+            log.debug('no satellites in SKY')
+            log.debug(nx)
             return
 
         metrics['SEEN'].set(0)
@@ -448,26 +445,27 @@ def getPositionData(gpsd, metrics, args):
 
         """process the dop metrics """
         for key in metrics['SKY'].keys():
-            if (hasattr(nx, key)):
-
+            if hasattr(nx, key):
                 value = getattr(nx, key, -1)
                 metrics['SKY'][key].set(getattr(nx, key, -1))
-                if (args.debug > 2): log.debug (f'set {key} to {value}') 
+                if args.debug > 2:
+                    log.debug(f'set {key} to {value}') 
 
 
     elif nx['class'] == 'TPV':
         for key in metrics['TPV'].keys():
-            if (hasattr(nx, key)):
+            if hasattr(nx, key):
                 value = getattr(nx, key, -1)
                 metrics['TPV'][key].set(value)
-                if (args.debug > 2): log.debug (f'set {key} to {value}')
+                if args.debug > 2:
+                    log.debug(f'set {key} to {value}')
         
         if args.geo_offset:
-            if (hasattr(nx, 'lat') and hasattr(nx, 'lon') ):
+            if hasattr(nx, 'lat') and hasattr(nx, 'lon'):
                 offset = MeterOffsetSmall((args.geo_lat, args.geo_lon), (nx['lat'], nx['lon']))
                 distance  = gps.misc.EarthDistanceSmall((nx['lat'], nx['lon']), (args.geo_lat, args.geo_lon))
                 
-                log.debug (f'distance {distance:0.2f}m offset x = {offset[0]:0.2f}m y = {offset[1]:0.2f}m')
+                log.debug(f'distance {distance:0.2f}m offset x = {offset[0]:0.2f}m y = {offset[1]:0.2f}m')
                 
                 metrics['GEO_OFFSET_X'].observe(offset[0])
                 metrics['GEO_OFFSET_Y'].observe(offset[1])
@@ -477,8 +475,8 @@ def getPositionData(gpsd, metrics, args):
         pass
     
     else:
-        log.debug (f'received {nx["class"]}')
-        log.debug (nx)
+        log.debug(f'received {nx["class"]}')
+        log.debug(nx)
 
 def MeterOffsetSmall(c1, c2):
     "Return offset in meters of second arg from first."
@@ -571,7 +569,7 @@ class SatCollector(object):
             'health' : GaugeMetricFamily('gpsd_health', 'The health of this satellite. 0 is unknown, 1 is OK, and 2 is unhealthy', labels=['PRN', 'svid', 'gnssid', 'used'])
         }
         
-        log.debug(f'SatCollector::collect started ')
+        log.debug('SatCollector::collect started')
         last_measurement = {}
         
         while not sat_queue.empty():
