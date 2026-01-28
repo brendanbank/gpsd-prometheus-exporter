@@ -31,7 +31,6 @@ import json
 import logging
 from prometheus_client import Histogram, CollectorRegistry, start_http_server, Gauge, Info
 from prometheus_client.metrics_core import GaugeMetricFamily
-from time import gmtime
 
 log = logging.getLogger(__name__)
 
@@ -44,8 +43,6 @@ __date__ = '2021-01-10'
 __updated__ = '2025-08-08'
 
 DEBUG = 1
-TESTRUN = 0
-PROFILE = 0
 GPSD_PORT = 2947
 EXPORTER_PORT = 9015
 DEFAULT_HOST = 'localhost'
@@ -56,7 +53,7 @@ NSEC=1000000000
 USEC=1000000
 MSEC=1000
     
-class DepencendyError(Exception):
+class DependencyError(Exception):
     pass
 
 # Monkey patch to handle JSON encoding issues with newer Python versions
@@ -76,7 +73,7 @@ except Exception:
 try:
     from packaging import version
     if version.parse(gps.__version__) < version.parse("3.18"):
-        raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+        raise DependencyError('Please upgrade the python gps package to 3.18 or higher.')
 except ImportError:
     # Fallback to simple string comparison if packaging not available
     try:
@@ -84,7 +81,7 @@ except ImportError:
         if len(gps_version) >= 2:
             major, minor = int(gps_version[0]), int(gps_version[1])
             if major < 3 or (major == 3 and minor < 18):
-                raise DepencendyError('Please upgrade the python gps package to 3.18 or higher.')
+                raise DependencyError('Please upgrade the python gps package to 3.18 or higher.')
     except (ValueError, AttributeError):
         # If version check fails, continue anyway
         pass
@@ -102,9 +99,9 @@ class CLIError(Exception):
     def __unicode__(self):
         return self.msg
 
-class ModuleDepencendyError(ModuleNotFoundError):
+class ModuleDependencyError(ModuleNotFoundError):
     def __init__(self, msg):
-        super(ModuleDepencendyError).__init__(type(self))
+        super(ModuleDependencyError).__init__(type(self))
         self.msg = "E: %s" % msg
 
     def __str__(self):
@@ -386,7 +383,7 @@ def getPositionData(gpsd, metrics, args):
     # For a list of all supported classes and fields refer to:
     # https://gpsd.gitlab.io/gpsd/gpsd_json.html
     
-    if (args.debug > 1): log.debug(f'recieved {nx["class"]}: {nx}') 
+    if (args.debug > 1): log.debug(f'received {nx["class"]}: {nx}') 
     
     if nx['class'] == 'VERSION':
         
@@ -399,8 +396,6 @@ def getPositionData(gpsd, metrics, args):
 #         PPSSUMMARY.observe(nx['clock_nsec'])
 
         if args.pps:
-            
-            args.pps_time1
             corr = args.pps_time1 * NSEC
             value = nx['clock_nsec'] - corr
             
@@ -514,7 +509,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     os.setuid(running_uid)
  
     # Ensure a very conservative umask
-    old_umask = os.umask(0o077)
+    os.umask(0o077)
 
 def loop_connection(metrics, args):
 
@@ -541,8 +536,8 @@ def loop_connection(metrics, args):
     except Exception as e:
         log.critical(f'Unexpected error connecting to gpsd: {e}')
         raise ConnectionRefusedError(f'Failed to connect to gpsd: {e}')
-    running = True
-    while running:
+
+    while True:
         try:
             getPositionData(gpsd, metrics, args)
         except KeyboardInterrupt:
@@ -639,10 +634,6 @@ def add_sat_stats(satellites):
     for sat in satellites:
         try:
             ts = time.time()
-            ts_new = int(ts)
-            
-            # print (f'ts {ts} ts_new {ts_new}' )
-            
             sat_queue.put({'sat': sat, 'ts': ts})
         except KeyError as e:
             # Handle missing satellite data fields
