@@ -1,4 +1,54 @@
 ----------------------------------------
+## What's New in 1.1.16
+
+### Highlights
+
+- **GPS Receiver Compatibility Fix**: Improved handling of GPS receivers that don't report `svid` or `gnssid` fields in satellite data
+- **Documentation Improvements**: Docker documentation moved to a separate file, simplified compose configurations, and corrected PPS documentation
+- **Build Optimizations**: Multi-platform Docker builds now share a single gps module build step for faster CI/CD
+
+### Changes since v1.1.15
+
+- Move Docker documentation to separate file and simplify compose configs (#31)
+- Fix compatibility with GPS receivers missing svid/gnssid fields (#30)
+- Fix documentation accuracy issues and incorrect defaults (#29)
+- Correct PPS documentation to clarify offset monitoring vs accuracy
+- Optimize multi-platform builds by building gps module once in CI/CD (#28)
+- Optimize Dockerfile with multi-stage build to speed up multi-platform builds
+- Remove deprecated GPSD modules and files to streamline the codebase (#27)
+- Update to gpsd version 3.26.1
+
+### Docker Image
+
+The Docker image is available at:
+```bash
+ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.16
+```
+
+### Usage
+
+```bash
+docker run -d \
+  --name gpsd-exporter \
+  --network host \
+  -e GPSD_HOST=localhost \
+  ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.16
+```
+
+### Multi-Platform Support
+
+This release includes Docker images for 7 architectures:
+- **linux/amd64**: Intel/AMD 64-bit processors
+- **linux/arm64**: Apple Silicon, modern ARM64 servers
+- **linux/arm/v7**: Raspberry Pi 3/4, modern ARM devices
+- **linux/arm/v6**: Raspberry Pi Zero/1, older ARM devices
+- **linux/386**: 32-bit Intel/AMD processors
+- **linux/ppc64le**: IBM POWER processors
+- **linux/s390x**: IBM Z mainframes
+
+Docker will automatically select the correct image for your platform.
+
+----------------------------------------
 ## What's New in 1.0.2
 
 ### Changes since commit a395c6ffe5d6383d6c6d58e4b77c8c803f366180

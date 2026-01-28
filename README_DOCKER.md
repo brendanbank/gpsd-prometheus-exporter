@@ -320,15 +320,7 @@ Build the Docker image locally with enhanced features.
 
 The gps Python module must be built before building the Docker image. This avoids rebuilding it for every platform during multi-platform builds.
 
-### Quick Build (Recommended)
-
-Use the helper script that builds the gps module and Docker image:
-
-```bash
-./build-docker.sh
-```
-
-### Manual Build
+### Building the Image
 
 ```bash
 # Step 1: Build the gps Python module from source
