@@ -13,14 +13,16 @@ A [Prometheus](https://prometheus.io/) exporter for the [gpsd](https://gpsd.gitl
   - [PPS Clock Offset Monitoring](#pps-clock-offset-monitoring)
   - [Geographic Offset Tracking](#geographic-offset-tracking)
 - [Installation](#installation)
-  - [Docker (Recommended)](#docker-recommended)
   - [Native Installation](#native-installation)
+  - [Docker](#docker)
 - [Configuration](#configuration)
   - [Command Line Options](#command-line-options)
 - [Usage](#usage)
   - [Testing the Exporter](#testing-the-exporter)
   - [Prometheus Integration](#prometheus-integration)
   - [Grafana Dashboard](#grafana-dashboard)
+- [License](#license)
+- [Contributing](#contributing)
 
 ## Overview
 
