@@ -64,45 +64,15 @@ Track position offset from a stationary reference point:
 
 ## Installation
 
-### Docker (Recommended)
-
-The easiest way to run the exporter is using Docker. For complete Docker installation instructions, configuration options, and platform-specific setup, see [README_DOCKER.md](README_DOCKER.md).
-
-**Quick Start:**
-
-```bash
-# Linux (default - host networking)
-docker run -d --name gpsd-exporter --network=host \
-  -e GPSD_HOST=localhost -e GPSD_PORT=2947 \
-  ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
-
-# macOS/Windows (bridge networking)
-docker run -d --name gpsd-exporter -p 9015:9015 \
-  -e GPSD_HOST=host.docker.internal -e GPSD_PORT=2947 \
-  ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
-
-# Using Docker Compose (Linux)
-docker compose up -d
-
-# Using Docker Compose (macOS/Windows - first time setup)
-cp docker-compose.override.yml.example docker-compose.override.yml
-docker compose up -d
-```
-
-See [README_DOCKER.md](README_DOCKER.md) for:
-- Docker Compose configuration
-- Environment variables
-- Platform-specific networking (Linux/macOS/Windows)
-- Local builds
-- Troubleshooting
-
 ### Native Installation
 
 For systems where Docker is not desired:
 
 #### Prerequisites
 
-Ensure gpsd, Prometheus, and Grafana are properly running. The exporter requires:
+Ensure gpsd, Prometheus, and Grafana are properly running. For gpsd installation instructions, see the [gpsd official documentation](https://gpsd.gitlab.io/gpsd/installation.html).
+
+The exporter requires:
 
 - Python 3
 - [prometheus_client](https://github.com/prometheus/client_python)
@@ -133,6 +103,10 @@ chmod +x /usr/local/bin/gpsd_exporter.py
 systemctl enable gpsd_exporter.service
 systemctl start gpsd_exporter.service
 ```
+
+### Docker
+
+For complete Docker installation instructions, configuration options, and platform-specific setup, see [README_DOCKER.md](README_DOCKER.md).
 
 ## Configuration
 

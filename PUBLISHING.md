@@ -40,30 +40,40 @@ The workflow uses the built-in `GITHUB_TOKEN` for package publishing, which is a
 
 The pipeline includes:
 
-### 1. **Testing Job**
-- Python syntax validation
-- Dependency installation
-- Entrypoint script testing
+### 1. **Build GPS Module Job**
+- Clones gpsd repository (version 3.26.1)
+- Builds the gps Python module from source using scons
+- Uploads module as artifact for subsequent jobs
+- This single build is shared across all jobs for efficiency
 
-### 2. **Build and Push Job**
-- Multi-platform Docker builds
+### 2. **Testing Job**
+- Python syntax validation (`py_compile`)
+- Dependency installation (prometheus-client)
+- Downloads pre-built gps module artifact
+- CLI help smoke test to verify module integration
+
+### 3. **Build and Push Job**
+- Downloads pre-built gps module artifact
+- Multi-platform Docker builds (7 architectures):
+  - linux/386, linux/amd64, linux/arm/v6, linux/arm/v7
+  - linux/arm64, linux/ppc64le, linux/s390x
 - Automatic tagging based on:
   - Git tags (semantic versions)
   - Branch names
   - Commit SHA
-- Caching for faster builds
+- GitHub Actions cache for faster builds
 
-### 3. **Security Scanning**
+### 4. **Security Scanning**
 - Trivy vulnerability scanning
 - SARIF report upload to GitHub Security tab
 
 ## Pipeline Triggers
 
 The pipeline runs on:
-- **Push to main/develop branches**: Build and push latest
-- **Pull requests**: Test only (no push)
-- **Git tags (v*)**: Build and push versioned releases
-- **Manual trigger**: Via GitHub Actions UI
+- **Push to develop branch**: Build and push with branch tag
+- **Pull requests to master**: Test only (no push)
+- **Git tags (v*)**: Build and push versioned releases with `latest` tag
+- **Manual trigger**: Via GitHub Actions UI (workflow_dispatch)
 
 ## Usage Examples
 
@@ -82,8 +92,8 @@ docker push ghcr.io/YOUR_USERNAME/gpsd-prometheus-exporter:latest
 
 ```bash
 # Create a release
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.17
+git push origin v1.1.17
 # Pipeline automatically builds and publishes
 ```
 
