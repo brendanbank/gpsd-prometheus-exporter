@@ -50,16 +50,28 @@ curl -s localhost:9015/metrics
 - **Privilege dropping**: Switches from root to nobody:nogroup after binding
 - **Thread-safe queue**: Satellite data queued from reader, consumed on `/metrics` scrape
 
-## Docker Networking
+## Networking
 
-- **Linux**: Uses host networking (default in docker-compose.yml)
-- **macOS/Windows**: Requires bridge networking with `docker-compose.override.yml` (copy from `.example`)
+- **IPv6**: Exporter binds to `::` (dual-stack) by default via `-L`/`--listen-address` CLI option and `LISTEN_ADDRESS` env var. Accepts both IPv4 and IPv6.
+- **gpsd client**: Uses `socket.getaddrinfo()`, supports IPv4 and IPv6 hosts natively.
+- **Docker (Linux)**: Uses host networking (default in docker-compose.yml). IPv6 works automatically.
+- **Docker (macOS/Windows)**: Requires bridge networking with `docker-compose.override.yml` (copy from `.example`). IPv6 requires enabling `"ipv6": true` in Docker daemon config.
 
 ## Dependencies
 
 - `prometheus-client` - Metrics library
 - `gps` - Vendored in `./gps/` directory, built from gpsd source via Makefile
 - Requires gpsd >= 3.18
+
+## Adding CLI Arguments
+
+When adding a new CLI argument, update all of these:
+1. `gpsd_exporter.py` — add `parser.add_argument()` and use in code
+2. `entrypoint.sh` — map env var to CLI flag
+3. `docker-compose.yml` — add env var with default
+4. `docker-compose.build.yml` — same
+5. `README.md` — update CLI help output
+6. `README_DOCKER.md` — update env var table, compose snippets, and `.env` example
 
 ## CI/CD
 
@@ -69,3 +81,12 @@ GitHub Actions workflow (`.github/workflows/docker-publish.yml`):
 3. Builds multi-platform Docker images (7 architectures)
 4. Security scan with Trivy
 5. Pushes to ghcr.io
+
+## Release Process
+
+1. Bump `__version__` and `__updated__` in `gpsd_exporter.py`
+2. Update `RELEASE_NOTES.md`
+3. Commit and push to master
+4. Create annotated tag: `git tag -a v1.x.x -m "..."`
+5. Push tag: `git push origin v1.x.x`
+6. CI/CD automatically builds Docker images and creates a GitHub Release
