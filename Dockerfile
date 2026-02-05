@@ -2,7 +2,7 @@
 # The gps Python module is built once in CI/CD and provided as a build context
 # This avoids rebuilding the module for each platform (7+ platforms)
 
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONPATH=/app
