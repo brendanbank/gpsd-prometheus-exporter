@@ -1,4 +1,48 @@
 ----------------------------------------
+## What's New in 1.1.18
+
+### Highlights
+
+- **Security Fixes**: Upgrade Docker base image to `python:3.13-slim`, resolving CVEs in glibc, util-linux, pip, sqlite, tar, and sysvinit
+- **CI/CD Maintenance**: Update CodeQL Action from v3 to v4 ahead of v3 deprecation
+
+### Changes since v1.1.17
+
+- Upgrade Docker base image from `python:3.12-slim` to `python:3.13-slim` to fix Trivy security alerts
+- Update `github/codeql-action/upload-sarif` from v3 to v4
+- Update CLAUDE.md project guide
+
+### Docker Image
+
+The Docker image is available at:
+```bash
+ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.18
+```
+
+### Usage
+
+```bash
+docker run -d \
+  --name gpsd-exporter \
+  --network host \
+  -e GPSD_HOST=localhost \
+  ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.18
+```
+
+### Multi-Platform Support
+
+This release includes Docker images for 7 architectures:
+- **linux/amd64**: Intel/AMD 64-bit processors
+- **linux/arm64**: Apple Silicon, modern ARM64 servers
+- **linux/arm/v7**: Raspberry Pi 3/4, modern ARM devices
+- **linux/arm/v6**: Raspberry Pi Zero/1, older ARM devices
+- **linux/386**: 32-bit Intel/AMD processors
+- **linux/ppc64le**: IBM POWER processors
+- **linux/s390x**: IBM Z mainframes
+
+Docker will automatically select the correct image for your platform.
+
+----------------------------------------
 ## What's New in 1.1.17
 
 ### Highlights
