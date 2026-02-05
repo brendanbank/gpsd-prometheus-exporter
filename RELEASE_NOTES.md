@@ -1,4 +1,54 @@
 ----------------------------------------
+## What's New in 1.1.17
+
+### Highlights
+
+- **IPv6 Support**: The exporter now binds to `::` (dual-stack) by default, accepting both IPv4 and IPv6 connections (#36)
+- **Code Quality**: Improved code style consistency and removed unused code
+
+### Changes since v1.1.16
+
+- Add IPv6 support for the exporter HTTP server (#37)
+  - New `-L`/`--listen-address` CLI option (default: `::`)
+  - New `LISTEN_ADDRESS` environment variable for Docker
+  - Updated Docker Compose files and entrypoint
+  - Documentation for enabling IPv6 in Docker bridge networking
+- Improve code style consistency in gpsd_exporter.py (#35)
+- Fix typos and remove unused code in gpsd_exporter.py
+- Add CLAUDE.md project guide
+- Update documentation and remove unused files
+
+### Docker Image
+
+The Docker image is available at:
+```bash
+ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.17
+```
+
+### Usage
+
+```bash
+docker run -d \
+  --name gpsd-exporter \
+  --network host \
+  -e GPSD_HOST=localhost \
+  ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.17
+```
+
+### Multi-Platform Support
+
+This release includes Docker images for 7 architectures:
+- **linux/amd64**: Intel/AMD 64-bit processors
+- **linux/arm64**: Apple Silicon, modern ARM64 servers
+- **linux/arm/v7**: Raspberry Pi 3/4, modern ARM devices
+- **linux/arm/v6**: Raspberry Pi Zero/1, older ARM devices
+- **linux/386**: 32-bit Intel/AMD processors
+- **linux/ppc64le**: IBM POWER processors
+- **linux/s390x**: IBM Z mainframes
+
+Docker will automatically select the correct image for your platform.
+
+----------------------------------------
 ## What's New in 1.1.16
 
 ### Highlights
