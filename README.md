@@ -115,7 +115,8 @@ For complete Docker installation instructions, configuration options, and platfo
 ### Command Line Options
 
 ```bash
-usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-H HOSTNAME] [-E EXPORTER_PORT] [-t TIMEOUT]
+usage: gpsd_exporter.py [-h] [-v] [-V] [-d] [-p PORT] [-H HOSTNAME] [-E EXPORTER_PORT]
+                        [-L LISTEN_ADDRESS] [-t TIMEOUT]
                         [--retry-delay RETRY_DELAY] [--max-retry-delay MAX_RETRY_DELAY] [-S]
                         [--offset-from-geopoint] [--geopoint-lat GEO_LAT] [--geopoint-lon GEO_LON]
                         [--geo-bucket-size GEO_BUCKET_SIZE] [--geo-bucket-count GEO_BUCKET_COUNT]
@@ -134,6 +135,9 @@ options:
                         set gpsd TCP Hostname/IP address [default: localhost]
   -E EXPORTER_PORT, --exporter-port EXPORTER_PORT
                         set TCP Port for the exporter server [default: 9015]
+  -L LISTEN_ADDRESS, --listen-address LISTEN_ADDRESS
+                        set listen address for the exporter server. Use '::' for
+                        IPv4+IPv6 dual-stack, '0.0.0.0' for IPv4-only [default: ::]
   -t TIMEOUT, --timeout TIMEOUT
                         set connection timeout in seconds [default: 10]
   --retry-delay RETRY_DELAY

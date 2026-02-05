@@ -15,6 +15,7 @@ services:
       - GEO_BUCKET_SIZE=${GEO_BUCKET_SIZE:-0.5}
       - GEO_BUCKET_COUNT=${GEO_BUCKET_COUNT:-40}
       - EXPORTER_PORT=${EXPORTER_PORT:-9015}
+      - LISTEN_ADDRESS=${LISTEN_ADDRESS:-::}
       - DEBUG=${DEBUG:-0}
       - VERBOSE=${VERBOSE:-1}
     restart: unless-stopped

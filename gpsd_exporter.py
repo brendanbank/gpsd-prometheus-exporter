@@ -160,6 +160,9 @@ Usage:
                             help="set gpsd TCP Hostname/IP address [default: %(default)s]")
         parser.add_argument('-E', '--exporter-port', type=int, dest="exporter_port", default=EXPORTER_PORT,
                             help="set TCP Port for the exporter server [default: %(default)s]")
+        parser.add_argument('-L', '--listen-address', dest="listen_address", default='::',
+                            help="set listen address for the exporter server. Use '::' for IPv4+IPv6 dual-stack, "
+                                 "'0.0.0.0' for IPv4-only [default: %(default)s]")
         
         parser.add_argument('-t', '--timeout', type=int, dest="timeout", default=DEFAULT_TIMEOUT,
                             help="set connection timeout in seconds [default: %(default)s]")
@@ -213,8 +216,9 @@ Usage:
         
         metrics = init_metrics(args)
         
-        start_http_server(args.exporter_port, registry=metrics['registry'])
-        
+        log.info(f'Starting exporter on {args.listen_address}:{args.exporter_port}')
+        start_http_server(args.exporter_port, addr=args.listen_address, registry=metrics['registry'])
+
         retry_count = 0
         current_delay = args.retry_delay
         
