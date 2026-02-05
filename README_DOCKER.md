@@ -10,6 +10,7 @@ This guide covers all Docker-related installation and configuration options for 
   - [Building Locally](#building-locally)
   - [macOS/Windows Bridge Networking](#macoswindows-bridge-networking)
 - [Environment Variables](#environment-variables)
+- [IPv6 Support](#ipv6-support)
 - [Platform-Specific Configuration](#platform-specific-configuration)
   - [Linux](#linux)
   - [macOS/Windows](#macoswindows)
@@ -103,6 +104,7 @@ services:
       - GEO_BUCKET_SIZE=${GEO_BUCKET_SIZE:-0.5}
       - GEO_BUCKET_COUNT=${GEO_BUCKET_COUNT:-40}
       - EXPORTER_PORT=${EXPORTER_PORT:-9015}
+      - LISTEN_ADDRESS=${LISTEN_ADDRESS:-::}
       - DEBUG=${DEBUG:-0}
       - VERBOSE=${VERBOSE:-1}
     restart: unless-stopped
@@ -124,6 +126,7 @@ PPS_TIME1=0.123
 GEO_BUCKET_SIZE=0.5
 GEO_BUCKET_COUNT=40
 EXPORTER_PORT=9015
+LISTEN_ADDRESS=::
 VERBOSE=1
 DEBUG=0
 EOF
@@ -168,6 +171,7 @@ services:
       - GEO_BUCKET_SIZE=${GEO_BUCKET_SIZE:-0.5}
       - GEO_BUCKET_COUNT=${GEO_BUCKET_COUNT:-40}
       - EXPORTER_PORT=${EXPORTER_PORT:-9015}
+      - LISTEN_ADDRESS=${LISTEN_ADDRESS:-::}
       - DEBUG=${DEBUG:-0}
       - VERBOSE=${VERBOSE:-1}
     restart: unless-stopped
@@ -207,6 +211,7 @@ Configure the exporter using environment variables in your `.env` file or docker
 | `GPSD_HOST` | `localhost` | gpsd hostname/IP address |
 | `GPSD_PORT` | `2947` | gpsd TCP port |
 | `EXPORTER_PORT` | `9015` | Prometheus exporter port |
+| `LISTEN_ADDRESS` | `::` | Exporter listen address. `::` for IPv4+IPv6 dual-stack, `0.0.0.0` for IPv4-only |
 | `GEOPOINT_LON` | `38.897809878` | Reference longitude for offset calculation |
 | `GEOPOINT_LAT` | `-77.036551259` | Reference latitude for offset calculation |
 | `PPS_BUCKET_SIZE` | `250` | PPS histogram bucket size in nanoseconds |
@@ -216,6 +221,36 @@ Configure the exporter using environment variables in your `.env` file or docker
 | `GEO_BUCKET_SIZE` | `0.5` | Geo offset histogram bucket size in meters |
 | `GEO_BUCKET_COUNT` | `40` | Geo offset histogram bucket count |
 | `PPS_BUCKET_COUNT` | `40` | PPS histogram bucket count |
+
+## IPv6 Support
+
+The exporter binds to `::` (dual-stack) by default, accepting both IPv4 and IPv6 connections. This works out of the box with host networking on Linux.
+
+For **bridge networking**, Docker requires additional configuration to enable IPv6:
+
+1. **Enable IPv6 in the Docker daemon** by editing `/etc/docker/daemon.json`:
+   ```json
+   {
+     "ipv6": true,
+     "fixed-cidr-v6": "fd00::/80"
+   }
+   ```
+
+2. **Restart the Docker daemon:**
+   ```bash
+   sudo systemctl restart docker
+   ```
+
+3. **For Docker Compose**, enable IPv6 on the network:
+   ```yaml
+   networks:
+     default:
+       enable_ipv6: true
+   ```
+
+Without these steps, bridge-networked containers will only be reachable over IPv4 even though the exporter itself listens on `::`.
+
+To restrict the exporter to IPv4-only, set `LISTEN_ADDRESS=0.0.0.0`.
 
 ## Platform-Specific Configuration
 
@@ -243,11 +278,12 @@ docker compose up -d
 The default configuration uses host networking. Benefits:
 - Lower latency between containers and host services
 - Direct access to host network interfaces
+- IPv6 works automatically (the exporter binds to `::` by default)
 - No NAT overhead
 - No port mapping required
 
 **Bridge Networking (Optional):**
-If you need bridge networking on Linux (e.g., for network isolation):
+If you need bridge networking on Linux (e.g., for network isolation). For IPv6 support with bridge networking, see [IPv6 Support](#ipv6-support).
 ```bash
 docker run -d --name gpsd-exporter \
   -p 9015:9015 \

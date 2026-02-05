@@ -20,6 +20,9 @@ fi
 if [ -n "${EXPORTER_PORT}" ]; then
   EXPORTER_ARGS="${EXPORTER_ARGS} --exporter-port ${EXPORTER_PORT}"
 fi
+if [ -n "${LISTEN_ADDRESS}" ]; then
+  EXPORTER_ARGS="${EXPORTER_ARGS} --listen-address ${LISTEN_ADDRESS}"
+fi
 
 if [ -n "${GEOPOINT_LON}" ]; then
   EXPORTER_ARGS="${EXPORTER_ARGS} --geopoint-lon ${GEOPOINT_LON}"
