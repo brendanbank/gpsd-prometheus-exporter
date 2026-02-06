@@ -30,6 +30,8 @@ copy-gpsd: ## Copy installed Python library to ./gps directory
 	@echo "Copying Python library to $(TARGET_DIR)..."
 	rm -rf $(TARGET_DIR)
 	cp -r $(GPSD_INSTALL_DIR)/lib/gps $(TARGET_DIR)
+	@echo "Copying GPSD license files..."
+	cp $(GPSD_TEMP_DIR)/COPYING $(TARGET_DIR)/COPYING
 	@echo "Copy completed successfully!"
 
 clean: ## Remove temporary gpsd directory
