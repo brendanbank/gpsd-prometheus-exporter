@@ -44,6 +44,7 @@ jobs:
           echo "Copying to artifact directory..."
           mkdir -p ${GITHUB_WORKSPACE}/gps-artifact
           cp -r ${GPSD_INSTALL_DIR}/lib/gps/* ${GITHUB_WORKSPACE}/gps-artifact/
+          cp ${GPSD_TEMP_DIR}/COPYING ${GITHUB_WORKSPACE}/gps-artifact/COPYING
 
           echo "Build completed successfully!"
 
