@@ -1,4 +1,55 @@
 ----------------------------------------
+## What's New in 1.1.19
+
+### Highlights
+
+- **Bug Fix**: Fix global socket timeout affecting Prometheus HTTP server
+- **Alpine Migration**: Switch Docker base image from `python:3.13-slim` to `python:3.14-alpine`
+- **Dependency Management**: Enable Dependabot and bump `prometheus-client` to 0.24.1
+- **Licensing**: Include GPSD COPYING license file in the Docker image's gps module directory
+
+### Changes since v1.1.18
+
+- Fix global socket timeout affecting Prometheus HTTP server (#50)
+- Switch Docker base image from `python:3.13-slim` to `python:3.14-alpine`
+- Bump `prometheus-client` from 0.19.0 to 0.24.1
+- Enable Dependabot for GitHub Actions, pip, and Docker
+- Group dependabot updates into combined PRs per ecosystem
+- Bump `docker/build-push-action` 5 → 6
+- Bump `actions/setup-python` 4 → 6, `actions/download-artifact` 4 → 7, `actions/upload-artifact` 4 → 6, `actions/checkout` 4 → 6
+- Include GPSD COPYING license file in the Docker image's gps module directory
+
+### Docker Image
+
+The Docker image is available at:
+```bash
+ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.19
+```
+
+### Usage
+
+```bash
+docker run -d \
+  --name gpsd-exporter \
+  --network host \
+  -e GPSD_HOST=localhost \
+  ghcr.io/brendanbank/gpsd-prometheus-exporter:1.1.19
+```
+
+### Multi-Platform Support
+
+This release includes Docker images for 7 architectures:
+- **linux/amd64**: Intel/AMD 64-bit processors
+- **linux/arm64**: Apple Silicon, modern ARM64 servers
+- **linux/arm/v7**: Raspberry Pi 3/4, modern ARM devices
+- **linux/arm/v6**: Raspberry Pi Zero/1, older ARM devices
+- **linux/386**: 32-bit Intel/AMD processors
+- **linux/ppc64le**: IBM POWER processors
+- **linux/s390x**: IBM Z mainframes
+
+Docker will automatically select the correct image for your platform.
+
+----------------------------------------
 ## What's New in 1.1.18
 
 ### Highlights

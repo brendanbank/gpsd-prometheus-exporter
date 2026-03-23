@@ -328,7 +328,7 @@ docker run -d --name gpsd-exporter \
   -p 9015:9015 \
   --dns 8.8.8.8 \
   --dns 8.8.4.4 \
-  -e GPSD_HOST=ntp0.bgwlan.nl \
+  -e GPSD_HOST=gpsd.example.com \
   -e GPSD_PORT=2947 \
   ghcr.io/brendanbank/gpsd-prometheus-exporter:latest
 ```
