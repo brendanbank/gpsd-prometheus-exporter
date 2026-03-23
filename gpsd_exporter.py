@@ -516,15 +516,17 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 def loop_connection(metrics, args):
 
     try:
-        # Set socket timeout for the connection
-        socket.setdefaulttimeout(args.timeout)
-        
         log.info(f'Attempting to connect to gpsd at {args.hostname}:{args.port} with {args.timeout}s timeout')
         gpsd = gps.gps(host=args.hostname, port=args.port, verbose=1, mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE | gps.WATCH_SCALED)
 
         if not gpsd:
             log.critical(f'Could not connect to gpsd at {args.hostname}:{args.port}')
             raise ConnectionRefusedError(f'Failed to establish connection to gpsd at {args.hostname}:{args.port}')
+
+        # Set timeout on the gpsd socket only (not globally, which would
+        # also affect the Prometheus HTTP server sockets)
+        if hasattr(gpsd, 'ser') and hasattr(gpsd.ser, 'sock') and gpsd.ser.sock:
+            gpsd.ser.sock.settimeout(args.timeout)
 
         log.info(f'Successfully connected to gpsd at {args.hostname}:{args.port}')
         drop_privileges()
